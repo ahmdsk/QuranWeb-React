@@ -1,44 +1,57 @@
-.banner {
-    background-image: linear-gradient(to bottom right, #DF98FA, #9055FF);
+.topBar {
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    border-radius: 10px;
-    padding: 10px;
-    color: #fff;
-    position: relative;
-    overflow: hidden;
+    padding-bottom: 15px;
+}
+
+.title-home {
+  color: var(--primary);
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.banner {
+  background-image: linear-gradient(to bottom right, #df98fa, #9055ff);
+  display: flex;
+  justify-content: space-between;
+  border-radius: 10px;
+  padding: 10px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
 }
 
 .left-info {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px;
 }
 
 .container-last-read {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .last-read {
-    font-size: 16px;
-    font-weight: 500;
+  font-size: 16px;
+  font-weight: 500;
 }
 
 .surah-name {
-    font-size: 18px;
-    font-weight: 500;
+  font-size: 18px;
+  font-weight: 500;
 }
 
 .surah-number {
-    font-size: 14px;
-    font-weight: 400;
+  font-size: 14px;
+  font-weight: 400;
 }
 
 .right-info {
-    position: absolute;
-    right: -30px;
-    bottom: -30px;
+  position: absolute;
+  right: -30px;
+  bottom: -30px;
 }

@@ -3,6 +3,15 @@ import './Home.css'
 export default function Home() {
     return (
         <>
+            <div className="topBar">
+                <span>
+                    <img src="/menu-2-line.svg" alt="" />
+                </span>
+                <div className="title-home">Quran App</div>
+                <span>
+                    <img src="/search-line.svg" alt="" />
+                </span>
+            </div>
             <div className="banner">
                 <div className="left-info">
                     <div className="container-last-read">
