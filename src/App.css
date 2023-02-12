@@ -2,12 +2,21 @@
   --primary: #672CBC;
   --info: #8789A3;
   --gray: #F9B091;
+  --font-surah: #240F4F;
 }
 
 .App {
   max-width: 450px;
-  height: 100vh;
+  height: 100%;
   margin: 0 auto;
   padding: 20px;
   background-color: #fff;
+}
+
+.loading {
+  width: 100%;
+  display: inline-block;
+  padding: 10px;
+  color: var(--font-surah);
+  text-align: center;
 }
