@@ -1,0 +1,38 @@
+.splash {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.splash-title {
+  color: var(--primary);
+  font-weight: bold;
+  padding-top: 10%;
+  font-size: 28px;
+}
+
+.splash-description {
+  color: var(--info);
+  font-size: 18px;
+  width: 60%;
+  padding: 15px 0 20px 0;
+}
+
+.banner-splash {
+  width: 90%;
+  position: relative;
+}
+
+.splash-button {
+  background-color: var(--gray);
+  border: none;
+  padding: 20px;
+  border-radius: 30px;
+  font-weight: 600;
+  color: #fff;
+  font-size: 1.2em;
+  position: relative;
+  bottom: 40px;
+}
