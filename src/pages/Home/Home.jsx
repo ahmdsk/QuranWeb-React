@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import './Home.css'
 
 export default function Home() {
     const [surah, setSurah] = useState([])
     const [loading, setLoading] = useState(true)
+    const navigate = useNavigate()
 
     useEffect(() => {
         async function getAllSurah() {
@@ -18,11 +19,15 @@ export default function Home() {
         getAllSurah()
     }, []);
 
+    const detailSurah = (no_surah) => {
+        navigate(`/surah/${no_surah}`)
+    }
+
     return (
         <>
             <div className="topBar">
                 <span>
-                    <img src="/menu-2-line.svg" alt="" />
+                <img src="/menu-2-line.svg" alt="" />
                 </span>
                 <div className="title-home">
                     <Link to="/">Quran App</Link>
@@ -52,7 +57,7 @@ export default function Home() {
                 <div className="list-surah">
                     {surah.map((s) => {
                         return (
-                            <div className="surah" key={s.nomor}>
+                            <div className="surah" key={s.nomor} onClick={detailSurah.bind(this, s.nomor)}>
                                 <div className="surah-title">
                                     <div className="no-surah">
                                         <span>{s.nomor}</span>
