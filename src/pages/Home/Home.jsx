@@ -5,6 +5,8 @@ import './Home.css'
 export default function Home() {
     const [surah, setSurah] = useState([])
     const [loading, setLoading] = useState(true)
+    const [search, setSearch] = useState('')
+
     const navigate = useNavigate()
     const searchInput = useRef('')
 
@@ -25,14 +27,19 @@ export default function Home() {
     }
 
     const openSeachBar = () => {
-        searchInput.current.classList.toggle('dib')
+        searchInput.current.classList.toggle('toggle-search')
     }
+
+    const handleSearchSurah = (e) => {
+        setSearch(e.target.value.toLowerCase())
+    }
+
 
     return (
         <>
             <div className="topBar">
                 <span>
-                <img src="/menu-2-line.svg" alt="" />
+                    <img src="/menu-2-line.svg" alt="" />
                 </span>
                 <div className="title-home">
                     <Link to="/">Quran App</Link>
@@ -43,7 +50,7 @@ export default function Home() {
             </div>
 
             <div className="seacrhBar" ref={searchInput}>
-                <input type="text" placeholder="Search Surah..." />
+                <input type="text" placeholder="Search Surah..." onChange={handleSearchSurah} />
             </div>
 
             <div className="banner">
@@ -64,24 +71,25 @@ export default function Home() {
 
             {loading ? (<span className="loading">Loading Content...</span>) : (
                 <div className="list-surah">
-                    {surah.map((s) => {
-                        return (
-                            <div className="surah" key={s.nomor} onClick={detailSurah.bind(this, s.nomor)}>
-                                <div className="surah-title">
-                                    <div className="no-surah">
-                                        <span>{s.nomor}</span>
+                    {surah.filter((surah) => surah.nama_latin.toLowerCase().includes(search))
+                        .map((s) => {
+                            return (
+                                <div className="surah" key={s.nomor} onClick={detailSurah.bind(this, s.nomor)}>
+                                    <div className="surah-title">
+                                        <div className="no-surah">
+                                            <span>{s.nomor}</span>
+                                        </div>
+                                        <div className="surah-location">
+                                            <h2>{s.nama_latin}</h2>
+                                            <span>{s.tempat_turun} - {s.jumlah_ayat} Ayat</span>
+                                        </div>
                                     </div>
-                                    <div className="surah-location">
-                                        <h2>{s.nama_latin}</h2>
-                                        <span>{s.tempat_turun} - {s.jumlah_ayat} Ayat</span>
+                                    <div className="name-surah-latin">
+                                        <h2>{s.nama}</h2>
                                     </div>
                                 </div>
-                                <div className="name-surah-latin">
-                                    <h2>{s.nama}</h2>
-                                </div>
-                            </div>
-                        )
-                    })}
+                            )
+                        })}
                 </div>
             )}
         </>

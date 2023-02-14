@@ -114,7 +114,7 @@
 }
 
 /* Search Bar */
-.dib {
+.toggle-search {
   display: inline-block !important;
 }
 
@@ -129,9 +129,10 @@
   border: 2px solid #c3cbd4;
   padding: 10px 20px;
   border-radius: 10px;
+  color: var(--font-surah)
 }
 
 .seacrhBar input:focus {
   outline: none;
-  border-color: var(--gray);
+  border-color: #a4abb2;
 }
