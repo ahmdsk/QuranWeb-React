@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import './Home.css'
 
@@ -6,6 +6,7 @@ export default function Home() {
     const [surah, setSurah] = useState([])
     const [loading, setLoading] = useState(true)
     const navigate = useNavigate()
+    const searchInput = useRef('')
 
     useEffect(() => {
         async function getAllSurah() {
@@ -23,6 +24,10 @@ export default function Home() {
         navigate(`/surah/${no_surah}`)
     }
 
+    const openSeachBar = () => {
+        searchInput.current.classList.toggle('dib')
+    }
+
     return (
         <>
             <div className="topBar">
@@ -33,8 +38,12 @@ export default function Home() {
                     <Link to="/">Quran App</Link>
                 </div>
                 <span>
-                    <img src="/search-line.svg" alt="" />
+                    <img src="/search-line.svg" alt="Search" onClick={openSeachBar} />
                 </span>
+            </div>
+
+            <div className="seacrhBar" ref={searchInput}>
+                <input type="text" placeholder="Search Surah..." />
             </div>
 
             <div className="banner">

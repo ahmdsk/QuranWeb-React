@@ -2,7 +2,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 20px;
+  padding-bottom: 15px;
 }
 
 .title-home {
@@ -111,4 +111,27 @@
 
 .name-surah-latin h2 {
   color: var(--primary);
+}
+
+/* Search Bar */
+.dib {
+  display: inline-block !important;
+}
+
+.seacrhBar {
+  padding: 5px 0 20px 0;
+  width: 100%;
+  display: none;
+}
+
+.seacrhBar input {
+  width: 100%;
+  border: 2px solid #c3cbd4;
+  padding: 10px 20px;
+  border-radius: 10px;
+}
+
+.seacrhBar input:focus {
+  outline: none;
+  border-color: var(--gray);
 }
