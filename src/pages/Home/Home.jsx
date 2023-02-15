@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { AiOutlineBug, AiOutlineClose, AiOutlineCoffee, AiOutlineFolderOpen, AiOutlineGithub, AiOutlineInstagram, AiOutlineWhatsApp } from "react-icons/ai"
 import './Home.css'
 
 export default function Home() {
@@ -10,6 +11,7 @@ export default function Home() {
 
     const navigate = useNavigate()
     const searchInput = useRef('')
+    const sidebar = useRef('')
 
     document.title = 'Quran App'
     
@@ -37,6 +39,14 @@ export default function Home() {
         searchInput.current.classList.toggle('toggle-search')
     }
 
+    const openMenu = () => {
+        sidebar.current.classList.add('toggle-search')
+    }
+
+    const closeMenu = () => {
+        sidebar.current.classList.remove('toggle-search')
+    }
+
     const handleSearchSurah = (e) => {
         setSearch(e.target.value.toLowerCase())
     }
@@ -44,15 +54,49 @@ export default function Home() {
     return (
         <>
             <div className="topBar">
-                <span>
+                <span onClick={openMenu}>
                     <img src="/menu-2-line.svg" alt="" />
                 </span>
                 <div className="title-home">
                     <Link to="/">Quran App</Link>
                 </div>
-                <span>
-                    <img src="/search-line.svg" alt="Search" onClick={openSeachBar} />
+                <span onClick={openSeachBar}>
+                    <img src="/search-line.svg" alt="Search" />
                 </span>
+            </div>
+
+            <div className="sidebar" ref={sidebar}>
+                <div className="sidebar-top">
+                    <h3>Menu</h3>
+                    <AiOutlineClose onClick={closeMenu} />
+                </div>
+                <div className="sidebar-body">
+                    <div className="sidebar-body-menu">
+                        <ul>
+                            <li>
+                                <AiOutlineCoffee />
+                                <a href="#">Trakteer coffe</a>
+                            </li>
+                            <li>
+                                <AiOutlineBug />
+                                <a href="#"> Report bug</a>
+                            </li>
+                            <li>
+                                <AiOutlineFolderOpen />
+                                <a href="#">This Repository</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div className="sidebar-footer">
+                        <h3 className="footer-title">Contact me</h3>
+                        <div className="icons-social">
+                            <a href="https://www.github.com/ahmdsk" target="_blank" rel="noopener noreferrer"><AiOutlineGithub /></a>
+                            <a href="https://www.wa.me/62895605997185" target="_blank" rel="noopener noreferrer"><AiOutlineWhatsApp /></a>
+                            <a href="https://www.instagram.com/ahmdsk._" target="_blank" rel="noopener noreferrer"><AiOutlineInstagram /></a>
+                        </div>
+                        <h4 className="copyright">Developed by <b>Ahmad Shaleh</b></h4>
+                    </div>
+                </div>
             </div>
 
             <div className="seacrhBar" ref={searchInput}>

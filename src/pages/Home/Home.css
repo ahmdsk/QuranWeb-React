@@ -138,3 +138,94 @@
   outline: none;
   border-color: #a4abb2;
 }
+
+/* Sidebar */
+.sidebar {
+  background-color: var(--primary);
+  color: #fff;
+  padding: 15px 20px;
+  border-radius: 0 15px 15px 0;
+  position: fixed;
+  z-index: 999;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 75%;
+  display: none;
+}
+
+.sidebar .sidebar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar .sidebar-top svg {
+  font-size: 1.5em;
+}
+
+.sidebar .sidebar-body {
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.sidebar .sidebar-body .sidebar-body-menu ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar .sidebar-body .sidebar-body-menu ul li {
+  padding: 15px 0;
+  display: flex;
+  align-items: center;
+}
+
+.sidebar .sidebar-body .sidebar-body-menu ul li:hover {
+  padding-left: 15px;
+  transition: .2s ease-in;
+}
+
+.sidebar .sidebar-body .sidebar-body-menu ul li svg {
+  font-size: 1.5em;
+  margin-right: 10px;
+}
+
+.sidebar .sidebar-body .sidebar-body-menu ul li a {
+  color: #fff;
+}
+
+.sidebar-footer {
+  text-align: center;
+  padding: 10px 0;
+}
+
+.sidebar-footer .footer-title {
+  font-size: 1em;
+  font-weight: 500;
+}
+
+.sidebar-footer .icons-social {
+  padding: 10px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  font-size: 2em;
+}
+
+.sidebar-footer .icons-social a {
+  color: #fff;
+}
+
+.sidebar-footer .icons-social a:hover {
+  font-size: 1.3em;
+  transition: .3s all;
+}
+
+.sidebar-footer .copyright {
+  font-weight: 500;
+  font-size: .8em;
+}
