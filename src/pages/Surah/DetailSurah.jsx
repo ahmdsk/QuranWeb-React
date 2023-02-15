@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom"
+import AudioPlayer from 'react-h5-audio-player';
+import 'react-h5-audio-player/lib/styles.css'
+
 import './DetailSurah.css'
 
 export default function DetailSurah() {
@@ -16,7 +19,7 @@ export default function DetailSurah() {
             setSurah(response)
             setLoading(false)
 
-            document.title = `${surah.nama_latin} | Quran App`
+            document.title = `${response.nama_latin} | Quran App`
         }
 
         getSurah()
@@ -25,6 +28,7 @@ export default function DetailSurah() {
             'nama_latin': surah.nama_latin,
             'nomor': surah.nomor
         }));
+
     }, [params, surah]);
 
     return (
@@ -34,9 +38,6 @@ export default function DetailSurah() {
                     <Link to="/home"><img src="/back.svg" alt="" /></Link>
                     <span>{surah.nama_latin}</span>
                 </div>
-                <span>
-                    <img src="/search-line.svg" alt="" />
-                </span>
             </div>
 
             <div className="banner-surah">
@@ -70,6 +71,13 @@ export default function DetailSurah() {
                     })}
                 </div>
             )}
+
+            <div className="audio-player-container">
+                {/* <audio controls src="{surah.audio}" type="audio/mpeg"></audio> */}
+                <div className="audio-player">
+                    <AudioPlayer autoPlay={false} src={surah.audio} />
+                </div>
+            </div>
         </>
     )
 }

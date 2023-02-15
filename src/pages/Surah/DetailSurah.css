@@ -1,3 +1,7 @@
+.title-home {
+    padding: 5px;
+}
+
 .title-home a {
     padding-right: 25px;
 }
@@ -45,6 +49,10 @@
     font-size: 14px;
 }
 
+.list-ayat {
+    padding-bottom: 100px;
+}
+
 .ayat {
     padding: 20px 0;
 }
@@ -90,4 +98,23 @@
 
 .ayat-idn {
     font-size: 14px;
+}
+
+.audio-player-container {
+    position: fixed;
+    bottom: 10px;
+    left: 0;
+    width: 100%;
+    padding: 20px 50px;
+}
+
+.audio-player {
+    border: 1px solid #f2f3f4;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0px 18px 11px -8px rgba(0,0,0,0.1);
+}
+
+.rhap_button-clear {
+    overflow: visible;
 }
