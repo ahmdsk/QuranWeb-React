@@ -6,6 +6,7 @@ export default function Home() {
     const [surah, setSurah] = useState([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
+    const [lastRead, setLastRead] = useState({})
 
     const navigate = useNavigate()
     const searchInput = useRef('')
@@ -20,6 +21,9 @@ export default function Home() {
         }
 
         getAllSurah()
+
+        const lastSurah = JSON.parse(localStorage.getItem('lastRead'));
+        lastSurah ? setLastRead(lastSurah) : setLastRead({})
     }, []);
 
     const detailSurah = (no_surah) => {
@@ -33,7 +37,6 @@ export default function Home() {
     const handleSearchSurah = (e) => {
         setSearch(e.target.value.toLowerCase())
     }
-
 
     return (
         <>
@@ -60,8 +63,14 @@ export default function Home() {
                         <h3 className="last-read">Last Read</h3>
                     </div>
                     <div className="container-surah">
-                        <h3 className="surah-name">Al-Fatihah</h3>
-                        <h5 className="surah-number">Ayat No: 1</h5>
+                        {Object.keys(lastRead).length > 0 ? (
+                            <>
+                                <h3 className="surah-name">{lastRead.nama_latin}</h3>
+                                <h5 className="surah-number">Ayat No: {lastRead.nomor}</h5>
+                            </>
+                        ) : (
+                            <h3 className="surah-name">nothing has been <br /> read yet.</h3>
+                        )}
                     </div>
                 </div>
                 <div className="right-info">
@@ -74,7 +83,7 @@ export default function Home() {
                     {surah.filter((surah) => surah.nama_latin.toLowerCase().includes(search))
                         .map((s) => {
                             return (
-                                <div className="surah" key={s.nomor} onClick={detailSurah.bind(this, s.nomor)}>
+                                <div className="surah" key={s.nomor} onClick={() => detailSurah(s.nomor)}>
                                     <div className="surah-title">
                                         <div className="no-surah">
                                             <span>{s.nomor}</span>

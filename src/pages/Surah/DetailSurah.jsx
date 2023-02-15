@@ -18,7 +18,12 @@ export default function DetailSurah() {
         }
 
         getSurah()
-    }, [params]);
+
+        localStorage.setItem('lastRead', JSON.stringify({
+            'nama_latin': surah.nama_latin,
+            'nomor': surah.nomor
+        }));
+    }, [params, surah]);
 
     return (
         <>
