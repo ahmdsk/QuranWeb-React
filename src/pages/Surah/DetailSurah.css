@@ -102,10 +102,10 @@
 
 .audio-player-container {
     position: fixed;
-    bottom: 10px;
+    bottom: 0;
     left: 0;
     width: 100%;
-    padding: 20px 50px;
+    padding: 35px;
 }
 
 .audio-player {
