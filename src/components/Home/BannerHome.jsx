@@ -10,7 +10,7 @@ export default function BannerHome(props) {
                     {Object.keys(props.lastRead).length > 0 ? (
                         <>
                             <h3 className="surah-name">{props.lastRead.nama_latin}</h3>
-                            <h5 className="surah-number">Ayat No: {props.lastRead.nomor}</h5>
+                            <h5 className="surah-number">Surah No: {props.lastRead.nomor}</h5>
                         </>
                     ) : (
                         <h3 className="surah-name">nothing has been <br /> read yet.</h3>
