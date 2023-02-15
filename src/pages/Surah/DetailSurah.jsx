@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom"
-import AudioPlayer from 'react-h5-audio-player';
+import { useParams } from "react-router-dom"
 import 'react-h5-audio-player/lib/styles.css'
 
 import './DetailSurah.css'
+import HeaderSurah from "../../components/Surah/HeaderSurah";
+import BannerSurah from "../../components/Surah/BannerSurah";
+import Loading from "../../components/Loading";
+import ListAyat from "../../components/Surah/ListAyat";
+import MurotalSurah from "../../components/Surah/MurotalSurah";
 
 export default function DetailSurah() {
     const params = useParams()
@@ -33,51 +37,12 @@ export default function DetailSurah() {
 
     return (
         <>
-            <div className="topBar">
-                <div className="title-home">
-                    <Link to="/home"><img src="/back.svg" alt="" /></Link>
-                    <span>{surah.nama_latin}</span>
-                </div>
-            </div>
+            <HeaderSurah surah={surah} />
+            <BannerSurah surah={surah} />
 
-            <div className="banner-surah">
-                <h3 className="surah-name-banner">{surah.nama_latin}</h3>
-                <h4 className="surah-arti">{surah.arti}</h4>
-                <span className="diver"></span>
-                <p className="surah-ayat-locate">{surah.tempat_turun} - {surah.jumlah_ayat} Ayat</p>
-                <img src="/bismillah.svg" alt="Bismillah" className="bismillah-img" />
-                <img src="/quran.svg" alt="Quran" className="quran-surah" />
-            </div>
+            {loading ? <Loading /> : <ListAyat surah={surah} />}
 
-            {loading ? <div className="loading">Loading Content...</div> : (
-                <div className="list-ayat">
-                    {surah.ayat.map((ayat) => {
-                        return (
-                            <div className="ayat" key={ayat.nomor}>
-                                <div className="number-page">
-                                    <span>{ayat.nomor}</span>
-                                </div>
-                                <div className="ayat-latin">
-                                    <h3>{ayat.ar}</h3>
-                                </div>
-                                <div className="ayat-tr">
-                                    <h3>{ayat.tr}</h3>
-                                </div>
-                                <div className="ayat-idn">
-                                    <p>{ayat.idn}</p>
-                                </div>
-                            </div>
-                        )
-                    })}
-                </div>
-            )}
-
-            <div className="audio-player-container">
-                {/* <audio controls src="{surah.audio}" type="audio/mpeg"></audio> */}
-                <div className="audio-player">
-                    <AudioPlayer autoPlay={false} src={surah.audio} />
-                </div>
-            </div>
+            <MurotalSurah surah={surah} />
         </>
     )
 }
