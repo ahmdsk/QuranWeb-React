@@ -87,6 +87,7 @@
   background-image: url("/public/muslim.svg");
   background-repeat: no-repeat;
   background-position: center;
+  background-size: cover;
   display: inline-flex;
   text-align: center;
   align-items: center;
