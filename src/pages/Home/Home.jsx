@@ -11,7 +11,10 @@ export default function Home() {
     const navigate = useNavigate()
     const searchInput = useRef('')
 
+    document.title = 'Quran App'
+    
     useEffect(() => {
+
         async function getAllSurah() {
             const request = await fetch('https://equran.id/api/surat');
             const response = await request.json();

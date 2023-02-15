@@ -4,6 +4,8 @@ import './SplashScreen.css'
 export default function SplashScreen() {
     const navigate = useNavigate()
 
+    document.title = 'Quran App'
+    
     const goToHome = () => {
         navigate('/home')
     }

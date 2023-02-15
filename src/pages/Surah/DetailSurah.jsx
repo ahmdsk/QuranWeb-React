@@ -15,6 +15,8 @@ export default function DetailSurah() {
 
             setSurah(response)
             setLoading(false)
+
+            document.title = `${surah.nama_latin} | Quran App`
         }
 
         getSurah()
