@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import './Home.css'
 import Sidebar from '../../components/Sidebar'
 import HeaderHome from '../../components/Home/HeaderHome'
 import BannerHome from '../../components/Home/BannerHome'
 import Loading from '../../components/Loading'
 import ListSurahHome from '../../components/Home/ListSurahHome'
 import InputSearchHome from '../../components/Home/InputSearchHome'
+import { AppContext } from '../../context/AppContext'
+
+import './Home.css'
 
 export default function Home() {
     const [surah, setSurah] = useState([])
@@ -17,7 +19,7 @@ export default function Home() {
     const searchInput = useRef('')
 
     document.title = 'Quran App'
-    
+
     useEffect(() => {
         async function getAllSurah() {
             const request = await fetch('https://equran.id/api/surat');
@@ -33,17 +35,22 @@ export default function Home() {
         lastSurah ? setLastRead(lastSurah) : setLastRead({})
     }, []);
 
-    const handleSearchSurah = (e) => {
-        setSearch(e.target.value.toLowerCase())
+    const data = {
+        sidebar,
+        searchInput,
+        lastRead,
+        search,
+        setSearch,
+        surah
     }
 
     return (
-        <>
-            <HeaderHome sidebar={sidebar} searchInput={searchInput} />
-            <Sidebar sidebar={sidebar} />
-            <InputSearchHome searchInput={searchInput} handleSearchSurah={handleSearchSurah} />
-            <BannerHome lastRead={lastRead} />
-            {loading ? <Loading /> : <ListSurahHome search={search} surah={surah} />}
-        </>
+        <AppContext.Provider value={data}>
+            <HeaderHome />
+            <Sidebar />
+            <InputSearchHome />
+            <BannerHome />
+            {loading ? <Loading /> : <ListSurahHome />}
+        </AppContext.Provider>
     )
 }

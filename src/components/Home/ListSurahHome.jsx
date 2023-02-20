@@ -1,16 +1,18 @@
+import { useContext } from "react"
 import { useNavigate } from "react-router-dom"
+import { AppContext } from "../../context/AppContext"
 
-export default function ListSurahHome(props) {
+export default function ListSurahHome() {
     const navigate = useNavigate()
+    const apps = useContext(AppContext)
 
-    const surah = props.surah
     const detailSurah = (no_surah) => {
         navigate(`/surah/${no_surah}`)
     }
-    
+
     return (
         <div className="list-surah">
-            {surah.filter((surah) => surah.nama_latin.toLowerCase().includes(props.search))
+            {apps.surah.filter((surah) => surah.nama_latin.toLowerCase().includes(apps.search))
                 .map((s) => {
                     return (
                         <div className="surah" key={s.nomor} onClick={() => detailSurah(s.nomor)}>

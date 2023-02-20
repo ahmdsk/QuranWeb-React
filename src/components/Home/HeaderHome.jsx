@@ -1,12 +1,16 @@
+import { useContext } from "react"
 import { Link } from "react-router-dom"
+import { AppContext } from "../../context/AppContext"
 
-export default function HeaderHome(props) {
+export default function HeaderHome() {
+    const apps = useContext(AppContext)
+
     const openSeachBar = () => {
-        props.searchInput.current.classList.toggle('toggle-search')
+        apps.searchInput.current.classList.toggle('toggle-search')
     }
 
     const openMenu = () => {
-        props.sidebar.current.classList.add('toggle-search')
+        apps.sidebar.current.classList.add('toggle-search')
     }
 
     return (

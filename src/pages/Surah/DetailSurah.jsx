@@ -39,9 +39,7 @@ export default function DetailSurah() {
         <>
             <HeaderSurah surah={surah} />
             <BannerSurah surah={surah} />
-
             {loading ? <Loading /> : <ListAyat surah={surah} />}
-
             <MurotalSurah surah={surah} />
         </>
     )

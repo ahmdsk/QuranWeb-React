@@ -1,4 +1,9 @@
-export default function BannerHome(props) {
+import { useContext } from "react"
+import { AppContext } from "../../context/AppContext"
+
+export default function BannerHome() {
+    const apps = useContext(AppContext)
+
     return (
         <div className="banner">
             <div className="left-info">
@@ -7,10 +12,10 @@ export default function BannerHome(props) {
                     <h3 className="last-read">Last Read</h3>
                 </div>
                 <div className="container-surah">
-                    {Object.keys(props.lastRead).length > 0 ? (
+                    {Object.keys(apps.lastRead).length > 0 ? (
                         <>
-                            <h3 className="surah-name">{props.lastRead.nama_latin}</h3>
-                            <h5 className="surah-number">Surah No: {props.lastRead.nomor}</h5>
+                            <h3 className="surah-name">{apps.lastRead.nama_latin}</h3>
+                            <h5 className="surah-number">Surah No: {apps.lastRead.nomor}</h5>
                         </>
                     ) : (
                         <h3 className="surah-name">nothing has been <br /> read yet.</h3>
