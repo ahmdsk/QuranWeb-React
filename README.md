@@ -1,6 +1,14 @@
-# Getting Started with Create React App
+# QuranWeb 
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+<div style="display: flex; flex-wrap: wrap; gap: 15px;">
+<img src="https://raw.githubusercontent.com/ahmdsk/QuranWeb-React/main/public/Shoots/SplashScreen.png" width="15%" />
+<img src="https://raw.githubusercontent.com/ahmdsk/QuranWeb-React/main/public/Shoots/Homepage.png" width="15%" />
+<img src="https://raw.githubusercontent.com/ahmdsk/QuranWeb-React/main/public/Shoots/DetailSurah.png" width="15%" />
+<img src="https://raw.githubusercontent.com/ahmdsk/QuranWeb-React/main/public/Shoots/Search.png" width="15%" />
+<img src="https://raw.githubusercontent.com/ahmdsk/QuranWeb-React/main/public/Shoots/Sidebar.png" width="15%" />
+</div>
+
+[Live Demo](https://quran-web-react-cra.netlify.app).
 
 ## Available Scripts
 
