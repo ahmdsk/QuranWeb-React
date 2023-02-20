@@ -10,6 +10,8 @@
 
 [Live Demo](https://quran-web-react-cra.netlify.app).
 
+[API Quran](https://equran.id/apidev).
+
 don't forget to star this repository
 
 ## Available Scripts
