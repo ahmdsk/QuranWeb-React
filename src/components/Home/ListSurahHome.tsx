@@ -1,9 +1,8 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 import { BookOpen } from 'lucide-react'
 
 const ListSurahHome = () => {
-  const navigate = useNavigate()
   const { surahs } = useApp()
 
   return (
