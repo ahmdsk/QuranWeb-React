@@ -1,18 +1,19 @@
-import { Route, Routes } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom'
+import { AppProvider } from './context/AppContext'
 import './App.css';
+import Landing from './pages/Landing/Landing';
 import Home from './pages/Home/Home';
-import SplashScreen from './pages/SplashScreen/SplashScreen';
-import DetailSurah from './pages/Surah/DetailSurah';
+import Surah from './pages/Surah/Surah';
 
 function App() {
   return (
-    <div className='App'>
+    <AppProvider>
       <Routes>
-        <Route path="/" element={<SplashScreen />} />
+        <Route path="/" element={<Landing />} />
         <Route path="/home" element={<Home />} />
-        <Route path="/surah/:nomor" element={<DetailSurah />} />
+        <Route path="/surah/:id" element={<Surah />} />
       </Routes>
-    </div>
+    </AppProvider>
   );
 }
 
