@@ -1,3 +1,13 @@
+export interface Verse {
+    nomorAyat: number
+    teksArab: string
+    teksLatin: string
+    teksIndonesia: string
+    audio: {
+        [key: string]: string
+    }
+}
+
 export interface Surah {
     nomor: number
     nama: string
@@ -6,18 +16,10 @@ export interface Surah {
     tempatTurun: string
     arti: string
     deskripsi: string
-    audio: {
+    audioFull: {
         [key: string]: string
     }
-    ayat: Array<{
-        nomorAyat: number
-        teksArab: string
-        teksLatin: string
-        teksIndonesia: string
-        audio: {
-            [key: string]: string
-        }
-    }>
+    ayat: Array<Verse>
 }
 
 export interface LastRead {

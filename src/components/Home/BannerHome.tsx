@@ -1,58 +1,46 @@
-import { useNavigate } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
+import { useNavigate } from 'react-router-dom'
 import { BookOpen } from 'lucide-react'
 
 const BannerHome = () => {
-  const navigate = useNavigate()
   const { lastRead } = useApp()
+  const navigate = useNavigate()
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-background p-6">
+    <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-primary/90 to-primary p-6 text-primary-foreground shadow-lg">
       <div className="relative z-10">
-        <h2 className="text-2xl font-bold">Assalamualaikum</h2>
-        <p className="mt-1 text-muted-foreground">
-          Mari kita baca Al-Quran hari ini
-        </p>
-
+        <div className="mb-4 flex items-center gap-2">
+          <BookOpen className="h-5 w-5" />
+          <h2 className="text-lg font-semibold">Terakhir Dibaca</h2>
+        </div>
         {lastRead ? (
-          <div className="mt-4">
-            <p className="text-sm text-muted-foreground">Terakhir dibaca</p>
+          <div className="space-y-2">
+            <h3 className="text-2xl font-bold md:text-3xl">{lastRead.name}</h3>
+            <p className="text-sm opacity-90">
+              Ayat {lastRead.arabicName} • {lastRead.translation}
+            </p>
             <button
               onClick={() => navigate(`/surah/${lastRead.id}`)}
-              className="mt-2 flex w-full items-center justify-between rounded-lg border bg-background/50 p-4 backdrop-blur"
+              className="mt-4 inline-flex items-center justify-center rounded-md bg-primary-foreground px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary-foreground/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                  <BookOpen className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-medium">{lastRead.name}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {lastRead.arabicName} • {lastRead.verseCount} Ayat
-                  </p>
-                </div>
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {new Date(lastRead.lastRead).toLocaleDateString('id-ID', {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric'
-                })}
-              </div>
+              Lanjutkan Membaca
             </button>
           </div>
         ) : (
-          <button
-            onClick={() => navigate('/surah/1')}
-            className="mt-4 rounded-lg bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
-          >
-            Mulai Membaca
-          </button>
+          <div className="space-y-2">
+            <h3 className="text-2xl font-bold md:text-3xl">Mulai Membaca</h3>
+            <p className="text-sm opacity-90">Mulai perjalananmu dengan Al-Quran</p>
+            <button
+              onClick={() => navigate('/surah/1')}
+              className="mt-4 inline-flex items-center justify-center rounded-md bg-primary-foreground px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary-foreground/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              Mulai Membaca
+            </button>
+          </div>
         )}
       </div>
-
-      <div className="absolute -right-4 -top-4 h-32 w-32 rounded-full bg-primary/20 blur-2xl"></div>
-      <div className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-primary/20 blur-2xl"></div>
+      <div className="absolute -right-4 -top-4 h-32 w-32 rounded-full bg-primary-foreground/10" />
+      <div className="absolute -bottom-4 -left-4 h-32 w-32 rounded-full bg-primary-foreground/10" />
     </div>
   )
 }

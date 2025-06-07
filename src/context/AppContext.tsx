@@ -21,6 +21,8 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     const [theme, setTheme] = useState<'light' | 'dark'>('light')
 
+    const [selectedQari, setSelectedQari] = useState<string>('01')
+
     useEffect(() => {
         // Load last read from localStorage
         const savedLastRead = localStorage.getItem('lastRead')
@@ -50,6 +52,10 @@ export const AppProvider = ({ children }: AppProviderProps) => {
         setIsSidebarOpen(!isSidebarOpen)
     }
 
+    const handleQariChange = (qari: string) => {
+        setSelectedQari(qari)
+    }
+
     const value = {
         surahs,
         setSurahs,
@@ -59,6 +65,8 @@ export const AppProvider = ({ children }: AppProviderProps) => {
         toggleSidebar,
         theme,
         setTheme,
+        selectedQari,
+        handleQariChange
     }
 
     return <AppContext.Provider value={value}>{children}</AppContext.Provider>
