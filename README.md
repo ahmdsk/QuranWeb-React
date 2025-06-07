@@ -1,25 +1,45 @@
-# QuranWeb 
+# Quread
 
-<div style="display: flex; flex-wrap: wrap; gap: 15px;">
-<img src="https://raw.githubusercontent.com/ahmdsk/QuranWeb-React/main/public/Shoots/SplashScreen.png" width="15%" />
-<img src="https://raw.githubusercontent.com/ahmdsk/QuranWeb-React/main/public/Shoots/Homepage.png" width="15%" />
-<img src="https://raw.githubusercontent.com/ahmdsk/QuranWeb-React/main/public/Shoots/DetailSurah.png" width="15%" />
-<img src="https://raw.githubusercontent.com/ahmdsk/QuranWeb-React/main/public/Shoots/Search.png" width="15%" />
-<img src="https://raw.githubusercontent.com/ahmdsk/QuranWeb-React/main/public/Shoots/Sidebar.png" width="15%" />
-</div>
+![App Screenshot](public/Shoots/new/Screenshoot2.png)
 
-[Live Demo](https://quran-web-react-cra.netlify.app).
+**Quread** adalah aplikasi web untuk membaca Al-Qur’an secara nyaman, responsif, dan modern. Dirancang dengan gaya minimalis dan pengalaman pengguna yang tenang, Quread memudahkan siapa pun untuk membaca ayat-ayat suci Al-Qur’an, lengkap dengan terjemahan dan navigasi surah yang intuitif.
 
-[API Quran](https://equran.id/apidev).
+## Fitur
+- Baca Al-Qur’an secara online dengan teks Arab yang jelas.
+- Terjemahan bahasa Indonesia (dan dukungan multibahasa lainnya).
+- Navigasi Surah dan Juz yang cepat.
+- Pencarian ayat berdasarkan kata kunci.
+- Mode gelap dan terang untuk kenyamanan membaca.
+- Desain minimalis modern dengan sentuhan spiritual.
+- Ringan, responsif, dan mobile friendly.
 
-don't forget to star this repository
+## Screenshot
+![Quread](public/Shoots/new/Screenshoot1.png)
 
-## Available Scripts
+## Instalasi & Menjalankan
+1. **Clone repo**
+   ```bash
+   git clone <repo-url>
+   cd QuranWeb-React
+   ```
+2. **Install dependencies**
+   ```bash
+   npm install
+   # atau
+   yarn install
+   ```
+3. **Jalankan aplikasi**
+   ```bash
+   npm run dev
+   # atau
+   yarn dev
+   ```
 
-In the project directory, you can run:
+## Stack
+- React + Vite + Typescript (New)
+- TailwindCSS
+- shadcn/ui
+- Al-Qur’an API (equran.id)
 
-`yarn start` Runs the app in the development mode.
-
-`yarn test` Launches the test runner in the interactive watch mode.
-
-`yarn build` Builds the app for production to the `build` folder.
+## Lisensi
+MIT

@@ -17,7 +17,7 @@ const BannerHome = () => {
           <div className="space-y-2">
             <h3 className="text-2xl font-bold md:text-3xl">{lastRead.name}</h3>
             <p className="text-sm opacity-90">
-              Ayat {lastRead.arabicName} • {lastRead.translation}
+              Surah {lastRead.arabicName} • {lastRead.translation}
             </p>
             <button
               onClick={() => navigate(`/surah/${lastRead.id}`)}
