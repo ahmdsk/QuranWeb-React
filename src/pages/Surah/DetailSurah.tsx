@@ -3,16 +3,17 @@ import { useParams } from "react-router-dom"
 import 'react-h5-audio-player/lib/styles.css'
 
 import './DetailSurah.css'
-import HeaderSurah from "../../components/Surah/HeaderSurah";
-import BannerSurah from "../../components/Surah/BannerSurah";
-import Loading from "../../components/Loading";
-import ListAyat from "../../components/Surah/ListAyat";
-import MurotalSurah from "../../components/Surah/MurotalSurah";
+import HeaderSurah from "@/components/Surah/HeaderSurah";
+import BannerSurah from "@/components/Surah/BannerSurah";
+import Loading from "@/components/Loading";
+import ListAyat from "@/components/Surah/ListAyat";
+import MurotalSurah from "@/components/Surah/MurotalSurah";
+import { Surah } from "@/types";
 
 export default function DetailSurah() {
     const params = useParams()
 
-    const [surah, setSurah] = useState([])
+    const [surah, setSurah] = useState<Surah>()
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
@@ -29,16 +30,16 @@ export default function DetailSurah() {
         getSurah()
 
         localStorage.setItem('lastRead', JSON.stringify({
-            'nama_latin': surah.nama_latin,
-            'nomor': surah.nomor
+            'nama_latin': surah?.namaLatin,
+            'nomor': surah?.nomor
         }));
 
     }, [params, surah]);
 
     return (
         <>
-            <HeaderSurah surah={surah} />
-            <BannerSurah surah={surah} />
+            <HeaderSurah surah={surah!} />
+            <BannerSurah surah={surah!} />
             {loading ? <Loading /> : <ListAyat surah={surah} />}
             <MurotalSurah surah={surah} />
         </>
