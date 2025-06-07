@@ -1,6 +1,7 @@
 import { Menu, Moon, Sun } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import SearchDialog from '../SearchDialog'
+import { Link } from 'react-router-dom'
 
 const HeaderHome = () => {
     const { toggleSidebar, theme, setTheme } = useApp()
@@ -16,7 +17,7 @@ const HeaderHome = () => {
                     <span className="sr-only">Toggle sidebar</span>
                 </button>
                 <div className="flex items-center gap-2">
-                    <h1 className="text-xl font-bold">QuranWeb</h1>
+                    <Link to="/" className="text-xl font-bold">Quread</Link>
                 </div>
                 <div className="flex items-center gap-2">
                     <SearchDialog />
