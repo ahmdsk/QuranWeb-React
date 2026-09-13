@@ -40,10 +40,9 @@ export const QiblaCompass = ({ latitude, longitude, cityName }: QiblaCompassProp
   const [qiblaBearing, setQiblaBearing] = useState<number>(295)
   const [deviceHeading, setDeviceHeading] = useState<number>(0)
   const [compassSupported, setCompassSupported] = useState<boolean>(false)
-  const [permissionGranted, setPermissionGranted] = useState<boolean>(true)
 
-  // Calculate Qibla angle from coordinates to Kaaba (21.4225° N, 39.8262° E)
-  const calculateBearing = (userLatDeg: number, userLngDeg: number) => {
+  // Calculate Qibla angle from coordinates to Kaaba (21.4225° N, 39.8262° E) - Trigonometry Fallback
+  const calculateBearingMath = (userLatDeg: number, userLngDeg: number) => {
     const kaabaLat = (21.4225 * Math.PI) / 180
     const kaabaLng = (39.8262 * Math.PI) / 180
     const userLat = (userLatDeg * Math.PI) / 180
@@ -80,7 +79,21 @@ export const QiblaCompass = ({ latitude, longitude, cityName }: QiblaCompassProp
     }
 
     if (lat !== undefined && lng !== undefined) {
-      setQiblaBearing(calculateBearing(lat, lng))
+      // Direct local trigonometry calculation first for instant render
+      const localMathBearing = calculateBearingMath(lat, lng)
+      setQiblaBearing(localMathBearing)
+
+      // Fetch official Aladhan Qibla API (100% Free API)
+      fetch(`https://api.aladhan.com/v1/qibla/${lat}/${lng}`)
+        .then((res) => res.json())
+        .then((resData) => {
+          if (resData.code === 200 && resData.data?.direction) {
+            setQiblaBearing(Math.round(resData.data.direction))
+          }
+        })
+        .catch(() => {
+          // Silently fallback to offline math calculation
+        })
     }
   }, [latitude, longitude, cityName])
 
@@ -110,10 +123,7 @@ export const QiblaCompass = ({ latitude, longitude, cityName }: QiblaCompassProp
       try {
         const response = await (DeviceOrientationEvent as any).requestPermission()
         if (response === 'granted') {
-          setPermissionGranted(true)
           window.addEventListener('deviceorientation', handleOrientation, true)
-        } else {
-          setPermissionGranted(false)
         }
       } catch (err) {
         console.error(err)
