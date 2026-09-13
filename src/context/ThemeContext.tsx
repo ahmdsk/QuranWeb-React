@@ -1,10 +1,11 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 
-type Theme = 'light' | 'dark'
+export type ThemeMode = 'light' | 'dark' | 'system'
 
 interface ThemeContextType {
-  theme: Theme
-  setTheme: (theme: Theme) => void
+  theme: ThemeMode
+  setTheme: (theme: ThemeMode) => void
+  resolvedTheme: 'light' | 'dark'
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
@@ -22,23 +23,46 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider = ({ children }: ThemeProviderProps) => {
-  const [theme, setTheme] = useState<Theme>(() => {
-    const savedTheme = localStorage.getItem('theme')
-    return (savedTheme as Theme) || 'light'
+  const [theme, setThemeState] = useState<ThemeMode>(() => {
+    const savedTheme = localStorage.getItem('theme') as ThemeMode
+    return savedTheme || 'system'
   })
+
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('dark')
 
   useEffect(() => {
     const root = window.document.documentElement
-    root.classList.remove('light', 'dark')
-    root.classList.add(theme)
+
+    const applyTheme = () => {
+      let active: 'light' | 'dark' = 'dark'
+      if (theme === 'system') {
+        active = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+      } else {
+        active = theme
+      }
+
+      root.classList.remove('light', 'dark')
+      root.classList.add(active)
+      setResolvedTheme(active)
+    }
+
+    applyTheme()
     localStorage.setItem('theme', theme)
+
+    if (theme === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+      const handler = () => applyTheme()
+      mediaQuery.addEventListener('change', handler)
+      return () => mediaQuery.removeEventListener('change', handler)
+    }
   }, [theme])
 
   const value = {
     theme,
-    setTheme: (newTheme: Theme) => {
-      setTheme(newTheme)
-    }
+    setTheme: (newTheme: ThemeMode) => {
+      setThemeState(newTheme)
+    },
+    resolvedTheme
   }
 
   return (

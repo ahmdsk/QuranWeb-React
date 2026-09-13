@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { AppContextType, Surah, LastRead } from '../types'
+import { useTheme, ThemeMode } from './ThemeContext'
 
 const AppContext = createContext<AppContextType | undefined>(undefined)
 
@@ -16,11 +17,10 @@ interface AppProviderProps {
 }
 
 export const AppProvider = ({ children }: AppProviderProps) => {
+    const { theme: globalTheme, setTheme: setGlobalTheme, resolvedTheme } = useTheme()
     const [surahs, setSurahs] = useState<Surah[]>([])
     const [lastRead, setLastRead] = useState<LastRead | null>(null)
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-    const [theme, setTheme] = useState<'light' | 'dark'>('light')
-
     const [selectedQari, setSelectedQari] = useState<string>('01')
 
     useEffect(() => {
@@ -29,19 +29,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
         if (savedLastRead) {
             setLastRead(JSON.parse(savedLastRead))
         }
-
-        // Load theme from localStorage
-        const savedTheme = localStorage.getItem('theme')
-        if (savedTheme) {
-            setTheme(savedTheme as 'light' | 'dark')
-        }
     }, [])
-
-    useEffect(() => {
-        // Save theme to localStorage
-        localStorage.setItem('theme', theme)
-        document.documentElement.classList.toggle('dark', theme === 'dark')
-    }, [theme])
 
     const updateLastRead = (lastRead: LastRead) => {
         setLastRead(lastRead)
@@ -63,8 +51,10 @@ export const AppProvider = ({ children }: AppProviderProps) => {
         updateLastRead,
         isSidebarOpen,
         toggleSidebar,
-        theme,
-        setTheme,
+        theme: resolvedTheme,
+        setTheme: (newTheme: 'light' | 'dark') => setGlobalTheme(newTheme as ThemeMode),
+        globalTheme,
+        setGlobalTheme,
         selectedQari,
         handleQariChange
     }
