@@ -7,6 +7,7 @@ import DetailSurah from './pages/Surah/DetailSurah'
 import AuthPage from './pages/Auth/AuthPage'
 import ProfilePage from './pages/Profile/ProfilePage'
 import QiblaPage from './pages/Qibla/QiblaPage'
+import DoaPage from './pages/Doa/DoaPage'
 import { BottomNav } from './components/BottomNav'
 
 const AppContent = () => {
@@ -20,6 +21,7 @@ const AppContent = () => {
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/qibla" element={<QiblaPage />} />
+          <Route path="/doa" element={<DoaPage />} />
         </Routes>
       </div>
       <BottomNav />

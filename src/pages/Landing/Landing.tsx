@@ -448,24 +448,24 @@ export const Landing = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
 
           {/* Card 1: Baca Al-Qur'an */}
           <Link
             to="/home"
-            className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-xl transition-all space-y-4 flex flex-col justify-between"
+            className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all space-y-4 flex flex-col justify-between"
           >
             <div className="space-y-4">
               <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-center group-hover:scale-110 transition-transform">
                 <BookOpen className="w-6 h-6" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-xl font-bold font-heading text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors flex items-center gap-2">
-                  <span>Baca Al-Qur'an 30 Juz</span>
-                  <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-emerald-500" />
+                <h3 className="text-lg font-bold font-heading text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors flex items-center gap-2">
+                  <span>Al-Qur'an 30 Juz</span>
+                  <ExternalLink className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-emerald-500" />
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  Lengkap 114 Surah dengan teks Arab, latin, terjemahan Indonesia, audio murottal merdu, & penanda ayat.
+                  Lengkap 114 Surah, terjemahan, audio murottal merdu 5 qari, & tafsir per ayat.
                 </p>
               </div>
             </div>
@@ -479,25 +479,25 @@ export const Landing = () => {
           {/* Card 2: Jadwal Shalat Bulanan */}
           <div
             onClick={() => setIsFilterModalOpen(true)}
-            className="group cursor-pointer bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-xl transition-all space-y-4 flex flex-col justify-between"
+            className="group cursor-pointer bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all space-y-4 flex flex-col justify-between"
           >
             <div className="space-y-4">
               <div className="w-12 h-12 rounded-2xl bg-teal-100 dark:bg-teal-950/80 text-teal-600 dark:text-teal-400 font-bold flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Calendar className="w-6 h-6" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-xl font-bold font-heading text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors flex items-center gap-2">
-                  <span>Jadwal Shalat Bulanan</span>
-                  <Filter className="w-4 h-4 text-emerald-500" />
+                <h3 className="text-lg font-bold font-heading text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors flex items-center gap-2">
+                  <span>Jadwal Shalat</span>
+                  <Filter className="w-3.5 h-3.5 text-emerald-500" />
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  Jadwal waktu shalat lengkap seluruh kota di Indonesia (Subuh, Dzuhur, Ashar, Maghrib, Isya & Imsak).
+                  Jadwal shalat bulanan lengkap seluruh kota di Indonesia (Subuh s/d Isya & Imsak).
                 </p>
               </div>
             </div>
 
             <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs font-bold text-emerald-600 dark:text-emerald-400">
-              <span>Buka Filter Kota ({selectedKabkota})</span>
+              <span>Buka Jadwal Kota</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>
           </div>
@@ -505,25 +505,51 @@ export const Landing = () => {
           {/* Card 3: Kompas Kiblat Layar Penuh */}
           <Link
             to="/qibla"
-            className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-xl transition-all space-y-4 flex flex-col justify-between"
+            className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all space-y-4 flex flex-col justify-between"
           >
             <div className="space-y-4">
               <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 font-bold flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Compass className="w-6 h-6" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-xl font-bold font-heading text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors flex items-center gap-2">
-                  <span>Kompas Kiblat Presisi</span>
-                  <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-emerald-500" />
+                <h3 className="text-lg font-bold font-heading text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors flex items-center gap-2">
+                  <span>Kompas Kiblat</span>
+                  <ExternalLink className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-emerald-500" />
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  Deteksi otomatis arah Kaaba Makkah dengan sensor gyroscope & koordinat GPS presisi di layar penuh.
+                  Deteksi otomatis arah Kaaba Makkah dengan sensor gyroscope & koordinat GPS presisi.
                 </p>
               </div>
             </div>
 
             <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs font-bold text-emerald-600 dark:text-emerald-400">
-              <span>Buka Kompas Full Screen</span>
+              <span>Buka Kompas</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+          {/* Card 4: Doa-Doa Harian & Dzikir */}
+          <Link
+            to="/doa"
+            className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all space-y-4 flex flex-col justify-between"
+          >
+            <div className="space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400 font-bold flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Sparkles className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg font-bold font-heading text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors flex items-center gap-2">
+                  <span>Doa-Doa Harian</span>
+                  <ExternalLink className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-emerald-500" />
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Kumpulan doa shahih Hisnul Muslim (doa harian, dzikir pagi petang, perjalanan, dll).
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs font-bold text-emerald-600 dark:text-emerald-400">
+              <span>Buka Kumpulan Doa</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>
