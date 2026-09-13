@@ -51,40 +51,22 @@ const HeaderHome = () => {
                     <SearchDialog />
 
                     {/* Auth User Button */}
-                    <div className="relative" ref={userRef}>
-                        <button
-                            onClick={() => {
-                                if (currentUser) {
-                                    setOpenUserDropdown(!openUserDropdown)
-                                } else {
-                                    navigate('/auth')
-                                }
-                            }}
-                            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5 text-xs font-semibold"
-                            title={currentUser ? `Akun: ${currentUser.email}` : 'Masuk / Daftar Akun'}
-                        >
-                            <User className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                            <span className="hidden sm:inline">
-                                {currentUser ? currentUser.email?.split('@')[0] : 'Masuk'}
-                            </span>
-                        </button>
-
-                        {openUserDropdown && currentUser && (
-                            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 p-2 space-y-2">
-                                <div className="px-2 py-1 border-b border-slate-100 dark:border-slate-800">
-                                    <p className="text-[10px] text-slate-400">Terhubung sebagai</p>
-                                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{currentUser.email}</p>
-                                </div>
-                                <button
-                                    onClick={handleLogout}
-                                    className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
-                                >
-                                    <LogOut className="w-3.5 h-3.5" />
-                                    <span>Keluar Akun</span>
-                                </button>
-                            </div>
-                        )}
-                    </div>
+                    <button
+                        onClick={() => {
+                            if (currentUser) {
+                                navigate('/profile')
+                            } else {
+                                navigate('/auth')
+                            }
+                        }}
+                        className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5 text-xs font-semibold"
+                        title={currentUser ? `Profil: ${currentUser.email}` : 'Masuk / Daftar Akun'}
+                    >
+                        <User className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                        <span className="hidden sm:inline">
+                            {currentUser ? currentUser.email?.split('@')[0] : 'Masuk'}
+                        </span>
+                    </button>
 
                     {/* Theme Switcher */}
                     <div className="relative" ref={themeRef}>

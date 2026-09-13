@@ -1,0 +1,17 @@
+# A string identifier for the project.
+project_id = "udmcoeycclxsdjgnxfwp"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+
+[db]
+port = 54322
+shadow_port = 54320
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/auth", "http://localhost:3000/auth?mode=login", "http://localhost:3000/auth?mode=update_password"]

@@ -38,7 +38,10 @@ export interface AppContextType {
   surahs: Surah[]
   setSurahs: (surahs: Surah[]) => void
   lastRead: LastRead | null
+  bookmarks: LastRead[]
   updateLastRead: (lastRead: LastRead) => Promise<boolean>
+  toggleBookmark: (bookmark: LastRead) => Promise<{ success: boolean; isBookmarked: boolean }>
+  removeBookmark: (surahId: number, verseNumber?: number) => Promise<boolean>
   isSidebarOpen: boolean
   toggleSidebar: () => void
   theme: 'light' | 'dark'

@@ -10,7 +10,7 @@ import HeaderHome from '../../components/Home/HeaderHome'
 const DetailSurah = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { lastRead, updateLastRead } = useApp()
+  const { bookmarks, toggleBookmark, currentUser } = useApp()
 
   const [surah, setSurah] = useState<Surah | null>(null)
   const [verses, setVerses] = useState<Verse[]>([])
@@ -219,8 +219,9 @@ const DetailSurah = () => {
         {/* Verses List */}
         <div className="space-y-4">
           {verses.map((verse) => {
-            const isBookmarked =
-              lastRead?.id === surah.nomor && lastRead?.verseNumber === verse.nomorAyat
+            const isBookmarked = bookmarks.some(
+              (b) => b.id === surah.nomor && (b.verseNumber || 1) === verse.nomorAyat
+            )
 
             return (
               <div
@@ -247,7 +248,13 @@ const DetailSurah = () => {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={async () => {
-                        const success = await updateLastRead({
+                        if (!currentUser) {
+                          showToast('Silakan login/register terlebih dahulu.')
+                          navigate(`/auth?redirect=/surah/${surah.nomor}`)
+                          return
+                        }
+
+                        const res = await toggleBookmark({
                           id: surah.nomor,
                           name: `${surah.namaLatin} (Ayat ${verse.nomorAyat})`,
                           arabicName: surah.nama,
@@ -256,11 +263,11 @@ const DetailSurah = () => {
                           verseNumber: verse.nomorAyat,
                           lastRead: new Date().toISOString()
                         })
-                        if (success) {
+
+                        if (res.isBookmarked) {
                           showToast(`Ditandai: ${surah.namaLatin} Ayat ${verse.nomorAyat}`)
                         } else {
-                          showToast('Silakan login/register terlebih dahulu.')
-                          navigate(`/auth?redirect=/surah/${surah.nomor}`)
+                          showToast(`Tanda dihapus: ${surah.namaLatin} Ayat ${verse.nomorAyat}`)
                         }
                       }}
                       className={`p-2 rounded-xl transition-colors flex items-center gap-1.5 text-xs font-semibold ${
@@ -268,7 +275,7 @@ const DetailSurah = () => {
                           ? 'bg-amber-100 dark:bg-amber-400/20 text-amber-800 dark:text-amber-300 font-bold border border-amber-300 dark:border-amber-400/30'
                           : 'bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400'
                       }`}
-                      title="Tandai Sebagai Bacaan Terakhir"
+                      title={isBookmarked ? 'Hapus Tanda Ayat Ini' : 'Tandai Ayat Ini'}
                     >
                       <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-amber-500 text-amber-500' : 'text-amber-500'}`} />
                       <span className="hidden sm:inline">{isBookmarked ? 'Tertandai' : 'Tandai Ayat'}</span>

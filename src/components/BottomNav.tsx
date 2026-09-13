@@ -128,17 +128,17 @@ export const BottomNav = () => {
             }
           />
 
-          {/* Menu 5 (Paling Ujung Kanan): Akun / Masuk */}
+          {/* Menu 5 (Paling Ujung Kanan): Akun / Profil / Masuk */}
           <button
             onClick={() => {
               if (currentUser) {
-                setIsProfileMenuOpen(!isProfileMenuOpen)
+                navigate('/profile')
               } else {
                 navigate('/auth')
               }
             }}
             className={`flex flex-col items-center justify-center py-1 transition-colors ${
-              isActive('/auth')
+              isActive('/profile') || isActive('/auth')
                 ? 'text-emerald-600 dark:text-emerald-400 font-bold'
                 : 'text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400'
             }`}
