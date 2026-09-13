@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Compass, Navigation, MapPin, Smartphone, RefreshCw, Loader2, Locate, ArrowLeft } from 'lucide-react'
+import { Compass, MapPin, Smartphone, RefreshCw, Loader2, Locate, ArrowLeft } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { shalatService } from '@/services/shalatService'
 
@@ -182,6 +182,8 @@ export const QiblaPage = ({ latitude: propLat, longitude: propLng, cityName: pro
   }
 
   useEffect(() => {
+    requestCompassPermission()
+
     if (typeof window !== 'undefined') {
       const win = window as any
       if ('ondeviceorientationabsolute' in win) {
@@ -199,8 +201,6 @@ export const QiblaPage = ({ latitude: propLat, longitude: propLng, cityName: pro
       }
     }
   }, [])
-
-  const finalRotation = qiblaBearing - deviceHeading
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-between p-4 sm:p-6 lg:p-8 animate-in fade-in duration-300">
@@ -293,26 +293,31 @@ export const QiblaPage = ({ latitude: propLat, longitude: propLng, cityName: pro
               {/* Tanda Titik Derajat (Ticks) */}
               <div className="absolute inset-2 rounded-full border border-dashed border-slate-300 dark:border-slate-700/60 pointer-events-none"></div>
 
-              {/* KAABA MARKER (Posisi Tetap Pada Derajat Kiblat qiblaBearing terhadap Utara Dial) */}
+              {/* KAABA MARKER & CONNECTING NEEDLE FROM CENTER PIVOT */}
               <div
-                className="absolute inset-0 flex flex-col items-center justify-start p-2 pointer-events-none"
+                className="absolute inset-0 flex flex-col items-center justify-start pointer-events-none"
                 style={{
                   transform: `rotate(${qiblaBearing}deg)`,
                   transformOrigin: 'center center'
                 }}
               >
-                <div className="flex flex-col items-center space-y-1 -mt-2">
-                  <div className="w-10 h-10 rounded-full bg-emerald-600 text-white font-black flex items-center justify-center text-lg shadow-lg shadow-emerald-600/50 border-2 border-white dark:border-slate-900 animate-pulse">
+                {/* Kaaba Badge at top edge */}
+                <div className="pt-2 flex flex-col items-center">
+                  <div
+                    className="w-10 h-10 rounded-full bg-emerald-600 text-white font-black flex items-center justify-center text-lg shadow-lg shadow-emerald-600/50 border-2 border-white dark:border-slate-900 transition-transform duration-300 z-20"
+                    style={{ transform: `rotate(${-qiblaBearing + deviceHeading}deg)` }}
+                  >
                     🕋
                   </div>
-                  <Navigation className="w-6 h-6 text-emerald-600 dark:text-emerald-400 fill-emerald-600" />
-                  <div className="w-1.5 h-16 bg-gradient-to-b from-emerald-500 via-emerald-400 to-transparent rounded-full"></div>
                 </div>
+
+                {/* Needle Line connecting Center Pivot to Kaaba Badge */}
+                <div className="absolute top-7 bottom-1/2 w-1.5 bg-gradient-to-t from-emerald-600 via-emerald-400 to-emerald-500 rounded-full shadow-sm"></div>
               </div>
             </div>
 
             {/* Center Pivot Pin */}
-            <div className="w-6 h-6 rounded-full bg-slate-900 dark:bg-white border-2 border-emerald-500 z-10 shadow-md"></div>
+            <div className="w-6 h-6 rounded-full bg-slate-900 dark:bg-white border-2 border-emerald-500 z-20 shadow-md"></div>
           </div>
 
           {/* Status & Calibration Action */}
