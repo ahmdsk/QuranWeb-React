@@ -96,7 +96,7 @@ class ShalatService {
   }
 
   // Reverse Geocoding via Nominatim OpenStreetMap (Free, client-side reverse geocoding)
-  async reverseGeocode(lat: number, lon: number): Promise<{ provinsi?: string; kabkota?: string } | null> {
+  async reverseGeocode(lat: number, lon: number): Promise<{ provinsi?: string; kabkota?: string; displayName?: string } | null> {
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=id`,
