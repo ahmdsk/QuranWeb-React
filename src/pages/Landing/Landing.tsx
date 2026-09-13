@@ -13,7 +13,9 @@ import {
   Loader2,
   ArrowRight,
   Search,
-  Check
+  Check,
+  Filter,
+  X
 } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { shalatService } from '../../services/shalatService'
@@ -30,7 +32,10 @@ export default function Landing() {
   const [selectedBulan, setSelectedBulan] = useState<number>(new Date().getMonth() + 1)
   const [selectedTahun, setSelectedTahun] = useState<number>(new Date().getFullYear())
 
-  // Dropdown states
+  // Modal / Dialog Filter State
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState<boolean>(false)
+
+  // Dropdown states inside modal
   const [openProvDropdown, setOpenProvDropdown] = useState<boolean>(false)
   const [openKabDropdown, setOpenKabDropdown] = useState<boolean>(false)
   const [openBulanDropdown, setOpenBulanDropdown] = useState<boolean>(false)
@@ -49,6 +54,15 @@ export default function Landing() {
   const [jadwalData, setJadwalData] = useState<JadwalShalatData | null>(null)
   const [todaySchedule, setTodaySchedule] = useState<JadwalShalatItem | null>(null)
   const [nextPrayer, setNextPrayer] = useState<{ name: string; time: string; countdown: string } | null>(null)
+  const [currentTime, setCurrentTime] = useState<Date>(new Date())
+
+  // Real-time Digital Clock Effect
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
 
   const [isLoadingProv, setIsLoadingProv] = useState<boolean>(false)
   const [isLoadingKab, setIsLoadingKab] = useState<boolean>(false)
@@ -173,10 +187,17 @@ export default function Landing() {
     const diffHrs = Math.floor(diffMs / (1000 * 60 * 60))
     const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
 
+    let countdownStr = ''
+    if (diffHrs > 0) {
+      countdownStr = `${diffHrs}j ${diffMins}m`
+    } else {
+      countdownStr = `${diffMins} menit`
+    }
+
     setNextPrayer({
       name: foundNext.name,
       time: foundNext.time,
-      countdown: `${diffHrs}j ${diffMins}m`
+      countdown: countdownStr
     })
   }
 
@@ -241,7 +262,7 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#070c18] text-slate-800 dark:text-slate-100 font-sans selection:bg-emerald-500 selection:text-white transition-colors duration-200">
-
+      
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 dark:bg-[#070c18]/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800/80 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -316,7 +337,7 @@ export default function Landing() {
       {/* Hero Section */}
       <section className="py-12 md:py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-
+          
           <div className="lg:col-span-7 space-y-6">
             <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight text-slate-900 dark:text-white font-heading">
               Al-Qur'an Digital & <br />
@@ -326,17 +347,17 @@ export default function Landing() {
             </h1>
 
             <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed max-w-xl">
-              Platform Al-Qur'an digital bersih dan responsif, terintegrasi dengan jadwal waktu shalat 517 kabupaten/kota seluruh Indonesia dari API resmi EQuran.id.
+              Platform Al-Qur'an digital yang bersih, modern, dan responsif. Memudahkan Anda membaca ayat suci Al-Qur'an serta memantau waktu shalat presisi untuk seluruh wilayah kabupaten dan kota di Indonesia.
             </p>
 
             <div className="flex flex-wrap gap-3 pt-2">
-              <a
-                href="#jadwal"
+              <button
+                onClick={() => setIsFilterModalOpen(true)}
                 className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md shadow-emerald-600/20 flex items-center gap-2"
               >
-                <Clock className="w-4 h-4" />
-                Cek Jadwal Shalat
-              </a>
+                <Filter className="w-4 h-4" />
+                Ubah Lokasi & Waktu
+              </button>
               <button
                 onClick={handleTrackLocation}
                 disabled={isLocating}
@@ -348,9 +369,10 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* Right Hero Preview Card */}
+          {/* Right Hero Card Spotlight */}
           <div className="lg:col-span-5">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xl space-y-4 relative">
+              
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div>
                   <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5 font-heading">
@@ -359,9 +381,29 @@ export default function Landing() {
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400">{selectedProvinsi}</p>
                 </div>
-                <span className="text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800/60">
-                  {todaySchedule?.hari || 'Hari Ini'}
-                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setIsFilterModalOpen(true)}
+                    className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                    title="Ubah Filter Lokasi & Waktu"
+                  >
+                    <Filter className="w-4 h-4" />
+                  </button>
+                  <span className="text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800/60">
+                    {todaySchedule?.hari || 'Hari Ini'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Real-time Digital Clock Display */}
+              <div className="bg-emerald-500/10 dark:bg-emerald-950/40 border border-emerald-500/20 dark:border-emerald-800/40 p-3 rounded-xl flex items-center justify-between">
+                <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-semibold text-xs">
+                  <Clock className="w-4 h-4 text-emerald-600 dark:text-emerald-400 animate-pulse" />
+                  <span>Waktu Sekarang</span>
+                </div>
+                <div className="text-right font-mono font-extrabold text-lg text-emerald-700 dark:text-emerald-300 tracking-wider">
+                  {currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-emerald-600 text-white">{shalatService.getTimeZone(selectedProvinsi)}</span>
+                </div>
               </div>
 
               {nextPrayer && (
@@ -369,12 +411,12 @@ export default function Landing() {
                   <div>
                     <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">Shalat Berikutnya</span>
                     <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400 font-heading">{nextPrayer.name}</span>
-                    <span className="text-xs text-slate-600 dark:text-slate-300 block font-mono">{nextPrayer.time} WIB</span>
+                    <span className="text-xs text-slate-600 dark:text-slate-300 block font-mono">{nextPrayer.time} {shalatService.getTimeZone(selectedProvinsi)}</span>
                   </div>
                   <div className="text-right">
                     <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-semibold">Sisa Waktu</span>
                     <span className="text-sm font-bold font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-3 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800/80 inline-block mt-0.5">
-                      -{nextPrayer.countdown}
+                      {nextPrayer.countdown}
                     </span>
                   </div>
                 </div>
@@ -403,24 +445,36 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* JADWAL SHALAT FILTER SECTION */}
+      {/* JADWAL SHALAT BULANAN SECTION */}
       <section id="jadwal" className="py-14 bg-slate-100 dark:bg-[#050914] border-t border-b border-slate-200 dark:border-slate-800/80 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-
+          
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight font-heading">Jadwal Shalat Bulanan</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Pilih wilayah & periode atau gunakan GPS lokasi Anda</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Menampilkan jadwal untuk {selectedKabkota}, {selectedProvinsi} ({bulanNames[selectedBulan - 1]} {selectedTahun})
+              </p>
             </div>
 
-            <button
-              onClick={handleTrackLocation}
-              disabled={isLocating}
-              className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all flex items-center gap-2 shadow-md self-start md:self-auto"
-            >
-              <Navigation className="w-4 h-4" />
-              {isLocating ? 'Deteksi GPS...' : 'Gunakan GPS Lokasi Saya'}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsFilterModalOpen(true)}
+                className="px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-2 shadow-sm"
+              >
+                <Filter className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                Ubah Lokasi
+              </button>
+
+              <button
+                onClick={handleTrackLocation}
+                disabled={isLocating}
+                className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all flex items-center gap-2 shadow-md"
+              >
+                <Navigation className="w-4 h-4" />
+                {isLocating ? 'Deteksi GPS...' : 'GPS Lokasi Saya'}
+              </button>
+            </div>
           </div>
 
           {locationStatus && (
@@ -430,244 +484,13 @@ export default function Landing() {
             </div>
           )}
 
-          {/* ELEGANT COMBOBOX FILTER TOOLBAR */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 shadow-sm">
-
-            {/* Custom Combobox 1: Provinsi */}
-            <div className="space-y-1.5 relative" ref={provRef}>
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 block">
-                Provinsi
-              </label>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setOpenProvDropdown(!openProvDropdown)
-                  setOpenKabDropdown(false)
-                  setOpenBulanDropdown(false)
-                  setOpenTahunDropdown(false)
-                }}
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 text-left rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between transition-all"
-              >
-                <span className="truncate">{selectedProvinsi || 'Pilih Provinsi'}</span>
-                {isLoadingProv ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
-                ) : (
-                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${openProvDropdown ? 'rotate-180' : ''}`} />
-                )}
-              </button>
-
-              {openProvDropdown && (
-                <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden p-2">
-                  <div className="relative mb-2">
-                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
-                    <input
-                      type="text"
-                      placeholder="Cari provinsi..."
-                      value={searchProv}
-                      onChange={(e) => setSearchProv(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 text-xs rounded-lg pl-8 pr-3 py-1.5 border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-emerald-500"
-                    />
-                  </div>
-
-                  <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-1">
-                    {filteredProvList.length > 0 ? (
-                      filteredProvList.map((p) => (
-                        <button
-                          key={p}
-                          type="button"
-                          onClick={() => {
-                            setSelectedProvinsi(p)
-                            setOpenProvDropdown(false)
-                            setSearchProv('')
-                          }}
-                          className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium flex items-center justify-between transition-colors ${selectedProvinsi === p
-                              ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-bold'
-                              : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                            }`}
-                        >
-                          <span className="truncate">{p}</span>
-                          {selectedProvinsi === p && <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
-                        </button>
-                      ))
-                    ) : (
-                      <p className="text-[11px] text-slate-400 py-2 text-center">Provinsi tidak ditemukan</p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Custom Combobox 2: Kabupaten/Kota */}
-            <div className="space-y-1.5 relative" ref={kabRef}>
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 block">
-                Kabupaten / Kota
-              </label>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setOpenKabDropdown(!openKabDropdown)
-                  setOpenProvDropdown(false)
-                  setOpenBulanDropdown(false)
-                  setOpenTahunDropdown(false)
-                }}
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 text-left rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between transition-all"
-              >
-                <span className="truncate">{selectedKabkota || 'Pilih Kota'}</span>
-                {isLoadingKab ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
-                ) : (
-                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${openKabDropdown ? 'rotate-180' : ''}`} />
-                )}
-              </button>
-
-              {openKabDropdown && (
-                <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden p-2">
-                  <div className="relative mb-2">
-                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
-                    <input
-                      type="text"
-                      placeholder="Cari kab/kota..."
-                      value={searchKab}
-                      onChange={(e) => setSearchKab(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 text-xs rounded-lg pl-8 pr-3 py-1.5 border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-emerald-500"
-                    />
-                  </div>
-
-                  <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-1">
-                    {filteredKabList.length > 0 ? (
-                      filteredKabList.map((k) => (
-                        <button
-                          key={k}
-                          type="button"
-                          onClick={() => {
-                            setSelectedKabkota(k)
-                            setOpenKabDropdown(false)
-                            setSearchKab('')
-                          }}
-                          className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium flex items-center justify-between transition-colors ${selectedKabkota === k
-                              ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-bold'
-                              : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                            }`}
-                        >
-                          <span className="truncate">{k}</span>
-                          {selectedKabkota === k && <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
-                        </button>
-                      ))
-                    ) : (
-                      <p className="text-[11px] text-slate-400 py-2 text-center">Kab/Kota tidak ditemukan</p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Custom Combobox 3: Bulan & Tahun */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 block">
-                Bulan & Tahun
-              </label>
-
-              <div className="grid grid-cols-2 gap-2">
-                {/* Bulan */}
-                <div className="relative" ref={bulanRef}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOpenBulanDropdown(!openBulanDropdown)
-                      setOpenProvDropdown(false)
-                      setOpenKabDropdown(false)
-                      setOpenTahunDropdown(false)
-                    }}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 text-left rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between transition-all"
-                  >
-                    <span className="truncate">{bulanNames[selectedBulan - 1]}</span>
-                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${openBulanDropdown ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {openBulanDropdown && (
-                    <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden p-1 max-h-48 overflow-y-auto custom-scrollbar">
-                      {bulanNames.map((b, idx) => (
-                        <button
-                          key={b}
-                          type="button"
-                          onClick={() => {
-                            setSelectedBulan(idx + 1)
-                            setOpenBulanDropdown(false)
-                          }}
-                          className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${selectedBulan === idx + 1
-                              ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-bold'
-                              : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                            }`}
-                        >
-                          {b}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Tahun */}
-                <div className="relative" ref={tahunRef}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOpenTahunDropdown(!openTahunDropdown)
-                      setOpenProvDropdown(false)
-                      setOpenKabDropdown(false)
-                      setOpenBulanDropdown(false)
-                    }}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 text-left rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between transition-all"
-                  >
-                    <span>{selectedTahun}</span>
-                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${openTahunDropdown ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {openTahunDropdown && (
-                    <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden p-1">
-                      {[2025, 2026, 2027].map((y) => (
-                        <button
-                          key={y}
-                          type="button"
-                          onClick={() => {
-                            setSelectedTahun(y)
-                            setOpenTahunDropdown(false)
-                          }}
-                          className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${selectedTahun === y
-                              ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-bold'
-                              : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                            }`}
-                        >
-                          {y}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Toggle Monthly View */}
-            <div className="flex items-end">
-              <button
-                onClick={() => setShowMonthlyView(!showMonthlyView)}
-                className="w-full py-2.5 px-4 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-bold transition-all border border-slate-800 dark:border-slate-700 flex items-center justify-center gap-2 shadow-sm"
-              >
-                <Calendar className="w-4 h-4 text-emerald-400" />
-                {showMonthlyView ? 'Tutup Tabel Bulanan' : 'Buka Tabel Bulanan'}
-              </button>
-            </div>
-
-          </div>
-
-          {/* Table / Results */}
+          {/* Table Results */}
           {isLoadingJadwal ? (
             <div className="py-12 text-center text-slate-500 dark:text-slate-400 text-xs flex justify-center items-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
               Memuat data jadwal shalat...
             </div>
-          ) : showMonthlyView && jadwalData ? (
+          ) : jadwalData ? (
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 overflow-x-auto shadow-sm">
               <table className="w-full text-left text-xs">
                 <thead>
@@ -686,22 +509,38 @@ export default function Landing() {
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 font-mono">
                   {jadwalData.jadwal.map((item) => {
-                    const isToday = item.tanggal === new Date().getDate() && selectedBulan === (new Date().getMonth() + 1)
+                    const todayDate = new Date()
+                    const isToday =
+                      item.tanggal === todayDate.getDate() &&
+                      selectedBulan === todayDate.getMonth() + 1 &&
+                      selectedTahun === todayDate.getFullYear()
+
                     return (
                       <tr
                         key={item.tanggal}
-                        className={`hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors ${isToday ? 'bg-emerald-50 dark:bg-emerald-950/60 font-bold text-emerald-700 dark:text-emerald-300 border-l-4 border-l-emerald-500' : 'text-slate-700 dark:text-slate-300'}`}
+                        className={`hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-all ${
+                          isToday
+                            ? 'bg-emerald-100/80 dark:bg-emerald-950/80 text-emerald-950 dark:text-emerald-300 font-extrabold border-l-4 border-l-emerald-600 shadow-sm'
+                            : 'text-slate-700 dark:text-slate-300'
+                        }`}
                       >
-                        <td className="py-2.5 px-3 font-sans">{item.tanggal}</td>
-                        <td className="py-2.5 px-3 font-sans">{item.hari}</td>
-                        <td className="py-2.5 px-3 text-slate-400">{item.imsak}</td>
-                        <td className="py-2.5 px-3 text-emerald-600 dark:text-emerald-400">{item.subuh}</td>
-                        <td className="py-2.5 px-3">{item.terbit}</td>
-                        <td className="py-2.5 px-3">{item.dhuha}</td>
-                        <td className="py-2.5 px-3">{item.dzuhur}</td>
-                        <td className="py-2.5 px-3 text-emerald-600 dark:text-emerald-400">{item.ashar}</td>
-                        <td className="py-2.5 px-3 text-emerald-600 dark:text-emerald-400">{item.maghrib}</td>
-                        <td className="py-2.5 px-3">{item.isya}</td>
+                        <td className="py-3 px-3 font-sans flex items-center gap-2">
+                          <span>{item.tanggal}</span>
+                          {isToday && (
+                            <span className="text-[9px] uppercase font-black px-2 py-0.5 rounded-md bg-emerald-600 text-white shadow-xs">
+                              Hari Ini
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-3 font-sans">{item.hari}</td>
+                        <td className="py-3 px-3 text-slate-500 dark:text-slate-400">{item.imsak}</td>
+                        <td className="py-3 px-3 text-emerald-700 dark:text-emerald-400 font-semibold">{item.subuh}</td>
+                        <td className="py-3 px-3">{item.terbit}</td>
+                        <td className="py-3 px-3">{item.dhuha}</td>
+                        <td className="py-3 px-3">{item.dzuhur}</td>
+                        <td className="py-3 px-3 text-emerald-700 dark:text-emerald-400 font-semibold">{item.ashar}</td>
+                        <td className="py-3 px-3 text-emerald-700 dark:text-emerald-400 font-semibold">{item.maghrib}</td>
+                        <td className="py-3 px-3">{item.isya}</td>
                       </tr>
                     )
                   })}
@@ -752,9 +591,227 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* FILTER MODAL DIALOG */}
+      {isFilterModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl p-6 space-y-5 relative">
+            
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <Filter className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white font-heading">
+                  Filter Wilayah & Periode
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsFilterModalOpen(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              
+              {/* Provinsi Combobox */}
+              <div className="space-y-1.5 relative" ref={provRef}>
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 block">
+                  Provinsi
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpenProvDropdown(!openProvDropdown)
+                    setOpenKabDropdown(false)
+                    setOpenBulanDropdown(false)
+                    setOpenTahunDropdown(false)
+                  }}
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 text-left rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between transition-all"
+                >
+                  <span className="truncate">{selectedProvinsi || 'Pilih Provinsi'}</span>
+                  {isLoadingProv ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
+                  ) : (
+                    <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${openProvDropdown ? 'rotate-180' : ''}`} />
+                  )}
+                </button>
+
+                {openProvDropdown && (
+                  <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden p-2">
+                    <div className="relative mb-2">
+                      <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+                      <input
+                        type="text"
+                        placeholder="Cari provinsi..."
+                        value={searchProv}
+                        onChange={(e) => setSearchProv(e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 text-xs rounded-lg pl-8 pr-3 py-1.5 border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                    <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1">
+                      {filteredProvList.map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => {
+                            setSelectedProvinsi(p)
+                            setOpenProvDropdown(false)
+                            setSearchProv('')
+                          }}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium flex items-center justify-between transition-colors ${selectedProvinsi === p ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                        >
+                          <span className="truncate">{p}</span>
+                          {selectedProvinsi === p && <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Kab/Kota Combobox */}
+              <div className="space-y-1.5 relative" ref={kabRef}>
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 block">
+                  Kabupaten / Kota
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpenKabDropdown(!openKabDropdown)
+                    setOpenProvDropdown(false)
+                    setOpenBulanDropdown(false)
+                    setOpenTahunDropdown(false)
+                  }}
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 text-left rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between transition-all"
+                >
+                  <span className="truncate">{selectedKabkota || 'Pilih Kota'}</span>
+                  {isLoadingKab ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
+                  ) : (
+                    <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${openKabDropdown ? 'rotate-180' : ''}`} />
+                  )}
+                </button>
+
+                {openKabDropdown && (
+                  <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden p-2">
+                    <div className="relative mb-2">
+                      <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+                      <input
+                        type="text"
+                        placeholder="Cari kab/kota..."
+                        value={searchKab}
+                        onChange={(e) => setSearchKab(e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 text-xs rounded-lg pl-8 pr-3 py-1.5 border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                    <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1">
+                      {filteredKabList.map((k) => (
+                        <button
+                          key={k}
+                          type="button"
+                          onClick={() => {
+                            setSelectedKabkota(k)
+                            setOpenKabDropdown(false)
+                            setSearchKab('')
+                          }}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium flex items-center justify-between transition-colors ${selectedKabkota === k ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                        >
+                          <span className="truncate">{k}</span>
+                          {selectedKabkota === k && <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Bulan & Tahun */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 block">
+                  Bulan & Tahun
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="relative" ref={bulanRef}>
+                    <button
+                      type="button"
+                      onClick={() => setOpenBulanDropdown(!openBulanDropdown)}
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-left rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between"
+                    >
+                      <span>{bulanNames[selectedBulan - 1]}</span>
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                    </button>
+                    {openBulanDropdown && (
+                      <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden p-1 max-h-40 overflow-y-auto custom-scrollbar">
+                        {bulanNames.map((b, idx) => (
+                          <button
+                            key={b}
+                            type="button"
+                            onClick={() => { setSelectedBulan(idx + 1); setOpenBulanDropdown(false) }}
+                            className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium ${selectedBulan === idx + 1 ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                          >
+                            {b}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="relative" ref={tahunRef}>
+                    <button
+                      type="button"
+                      onClick={() => setOpenTahunDropdown(!openTahunDropdown)}
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-left rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between"
+                    >
+                      <span>{selectedTahun}</span>
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                    </button>
+                    {openTahunDropdown && (
+                      <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden p-1">
+                        {[2025, 2026, 2027].map((y) => (
+                          <button
+                            key={y}
+                            type="button"
+                            onClick={() => { setSelectedTahun(y); setOpenTahunDropdown(false) }}
+                            className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium ${selectedTahun === y ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                          >
+                            {y}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={handleTrackLocation}
+                disabled={isLocating}
+                className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all flex items-center gap-1.5"
+              >
+                <Navigation className="w-3.5 h-3.5 text-emerald-500" />
+                {isLocating ? 'Deteksi GPS...' : 'Gunakan GPS'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsFilterModalOpen(false)}
+                className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md"
+              >
+                Tampilkan Jadwal
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
       {/* Footer */}
       <footer className="border-t border-slate-200 dark:border-slate-800 py-8 text-center text-xs text-slate-500">
-        <p>&copy; {new Date().getFullYear()} Quread. Data Jadwal Shalat oleh equran.id</p>
+        <p>&copy; {new Date().getFullYear()} Quread. Platform Al-Qur'an & Jadwal Shalat Digital Indonesia.</p>
       </footer>
 
     </div>

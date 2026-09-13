@@ -1,3 +1,5 @@
+import { User } from '@supabase/supabase-js'
+
 export interface Verse {
   nomorAyat: number
   teksArab: string
@@ -28,6 +30,7 @@ export interface LastRead {
   arabicName: string
   translation: string
   verseCount: number
+  verseNumber?: number
   lastRead: string
 }
 
@@ -35,11 +38,18 @@ export interface AppContextType {
   surahs: Surah[]
   setSurahs: (surahs: Surah[]) => void
   lastRead: LastRead | null
-  updateLastRead: (lastRead: LastRead) => void
+  updateLastRead: (lastRead: LastRead) => Promise<boolean>
   isSidebarOpen: boolean
   toggleSidebar: () => void
   theme: 'light' | 'dark'
   setTheme: (theme: 'light' | 'dark') => void
+  globalTheme?: string
+  setGlobalTheme?: (theme: any) => void
+  selectedQari?: string
+  handleQariChange?: (qari: string) => void
+  currentUser: User | null
+  isAuthModalOpen?: boolean
+  setIsAuthModalOpen?: (open: boolean) => void
 }
 
 export interface JadwalShalatItem {

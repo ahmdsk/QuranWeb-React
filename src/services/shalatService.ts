@@ -3,6 +3,32 @@ import { JadwalShalatData } from '../types'
 class ShalatService {
   private baseUrl = 'https://equran.id/api/v2/shalat'
 
+  // Determination of Timezone (WIB, WITA, WIT) based on Indonesian Province
+  getTimeZone(provinsi: string): 'WIB' | 'WITA' | 'WIT' {
+    if (!provinsi) return 'WIB'
+    const p = provinsi.toLowerCase()
+
+    // WITA (UTC+8): Bali, NTB, NTT, Kalimantan Selatan, Kalimantan Timur, Kalimantan Utara, & Seluruh Sulawesi
+    if (
+      p.includes('bali') ||
+      p.includes('nusa tenggara') ||
+      p.includes('sulawesi') ||
+      p.includes('kalimantan selatan') ||
+      p.includes('kalimantan timur') ||
+      p.includes('kalimantan utara')
+    ) {
+      return 'WITA'
+    }
+
+    // WIT (UTC+9): Maluku & Papua
+    if (p.includes('maluku') || p.includes('papua')) {
+      return 'WIT'
+    }
+
+    // WIB (UTC+7): Sumatera, Jawa, Kalimantan Barat, Kalimantan Tengah
+    return 'WIB'
+  }
+
   async getProvinsi(): Promise<string[]> {
     try {
       const response = await fetch(`${this.baseUrl}/provinsi`)
@@ -76,7 +102,7 @@ class ShalatService {
         `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=id`,
         {
           headers: {
-            'User-Agent': 'QuranWeb-ReactApp/1.0',
+            'User-Agent': 'Quread-ReactApp/1.0',
           },
         }
       )

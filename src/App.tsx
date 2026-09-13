@@ -4,18 +4,30 @@ import { AppProvider } from '@/context/AppContext'
 import Landing from './pages/Landing/Landing'
 import Home from './pages/Home/Home'
 import DetailSurah from './pages/Surah/DetailSurah'
+import AuthPage from './pages/Auth/AuthPage'
+import { BottomNav } from './components/BottomNav'
+
+const AppContent = () => {
+  return (
+    <Router>
+      <div className="pb-16 md:pb-0">
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/home" element={<Home />} />
+          <Route path="/surah/:id" element={<DetailSurah />} />
+          <Route path="/auth" element={<AuthPage />} />
+        </Routes>
+      </div>
+      <BottomNav />
+    </Router>
+  )
+}
 
 const App = () => {
   return (
     <ThemeProvider>
       <AppProvider>
-        <Router>
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/home" element={<Home />} />
-            <Route path="/surah/:id" element={<DetailSurah />} />
-          </Routes>
-        </Router>
+        <AppContent />
       </AppProvider>
     </ThemeProvider>
   )

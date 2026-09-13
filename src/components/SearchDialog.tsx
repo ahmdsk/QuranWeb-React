@@ -1,4 +1,4 @@
-import { useState, useEffect, ChangeEvent } from 'react'
+import { useState, useEffect, ChangeEvent, ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, X } from 'lucide-react'
 import { useApp } from '../context/AppContext'
@@ -14,12 +14,26 @@ import {
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
-const SearchDialog = () => {
+interface SearchDialogProps {
+  isOpen?: boolean
+  onClose?: () => void
+  trigger?: ReactNode
+}
+
+const SearchDialog = ({ isOpen, onClose, trigger }: SearchDialogProps) => {
     const navigate = useNavigate()
     const { surahs } = useApp()
-    const [open, setOpen] = useState(false)
+    const [internalOpen, setInternalOpen] = useState(false)
     const [search, setSearch] = useState('')
     const [filteredSurahs, setFilteredSurahs] = useState<Surah[]>([])
+
+    const open = isOpen !== undefined ? isOpen : internalOpen
+    const setOpen = (val: boolean) => {
+      setInternalOpen(val)
+      if (!val && onClose) {
+        onClose()
+      }
+    }
 
     useEffect(() => {
         if (search) {
@@ -47,16 +61,23 @@ const SearchDialog = () => {
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9"
-                >
-                    <Search className="h-4 w-4" />
-                    <span className="sr-only">Search</span>
-                </Button>
-            </DialogTrigger>
+            {trigger ? (
+              <DialogTrigger asChild>
+                {trigger}
+              </DialogTrigger>
+            ) : isOpen === undefined ? (
+              <DialogTrigger asChild>
+                  <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9"
+                  >
+                      <Search className="h-4 w-4" />
+                      <span className="sr-only">Search</span>
+                  </Button>
+              </DialogTrigger>
+            ) : null}
+
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle>Cari Surah</DialogTitle>
