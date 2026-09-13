@@ -220,7 +220,7 @@ export const QiblaCompass = ({ latitude: propLat, longitude: propLng, cityName }
         
         {/* Loading Overlay */}
         {isLoading && (
-          <div className="absolute inset-0 z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-full flex flex-col items-center justify-center space-y-2">
+          <div className="absolute inset-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-full flex flex-col items-center justify-center space-y-2">
             <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
             <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
               Mendeteksi Lokasi GPS...
@@ -228,36 +228,50 @@ export const QiblaCompass = ({ latitude: propLat, longitude: propLng, cityName }
           </div>
         )}
 
-        {/* Fixed Outer Rose Dial (North, East, South, West) */}
-        <div className="absolute inset-0 rounded-full border-4 border-slate-100 dark:border-slate-800 shadow-inner flex items-center justify-center bg-slate-50/50 dark:bg-slate-950/50">
-          <span className="absolute top-2.5 text-xs font-black text-red-500 tracking-wider">N</span>
-          <span className="absolute right-3.5 text-xs font-black text-slate-400">E</span>
-          <span className="absolute bottom-2.5 text-xs font-black text-slate-400">S</span>
-          <span className="absolute left-3.5 text-xs font-black text-slate-400">W</span>
+        {/* FIXED TOP TARGET GUIDE */}
+        <div className="absolute -top-3.5 z-20 flex flex-col items-center animate-bounce">
+          <span className="text-[9px] uppercase font-black px-2 py-0.5 rounded-full bg-emerald-600 text-white shadow-md">
+            Atas HP Anda
+          </span>
+          <div className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[7px] border-t-emerald-600 mt-0.5"></div>
         </div>
 
-        {/* Rotating Compass Dial with Kaaba Needle */}
+        {/* ROTATING COMPASS DIAL (Mata Angin N-E-S-W Berputar Mengikuti Gerakan HP) */}
         <div
-          className="w-full h-full absolute inset-0 transition-transform duration-500 ease-out flex items-center justify-center"
-          style={{ transform: `rotate(${finalRotation}deg)`, transformOrigin: 'center center' }}
+          className="w-full h-full absolute inset-0 rounded-full border-4 border-slate-200 dark:border-slate-800 shadow-xl bg-slate-50/80 dark:bg-slate-950/80 transition-transform duration-300 ease-out flex items-center justify-center"
+          style={{
+            transform: `rotate(${-deviceHeading}deg)`,
+            transformOrigin: 'center center'
+          }}
         >
-          {/* Full Height Pointer Needle Centered */}
-          <div className="absolute inset-0 flex flex-col items-center justify-between p-3 pointer-events-none">
-            {/* Kaaba Head Icon at Qibla Bearing */}
-            <div className="flex flex-col items-center space-y-1">
-              <div className="w-10 h-10 rounded-full bg-emerald-600 text-white font-black flex items-center justify-center text-base shadow-lg shadow-emerald-600/50 border-2 border-white dark:border-slate-900 animate-pulse">
+          {/* Mata Angin Utama */}
+          <span className="absolute top-2 text-xs font-black text-red-500 tracking-wider">N</span>
+          <span className="absolute right-3.5 text-xs font-black text-slate-400">E</span>
+          <span className="absolute bottom-2 text-xs font-black text-slate-400">S</span>
+          <span className="absolute left-3.5 text-xs font-black text-slate-400">W</span>
+
+          {/* Tanda Titik Derajat (Ticks) */}
+          <div className="absolute inset-2 rounded-full border border-dashed border-slate-300 dark:border-slate-700/60 pointer-events-none"></div>
+
+          {/* KAABA MARKER (Posisi Tetap Pada Derajat Kiblat qiblaBearing terhadap Utara Dial) */}
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-start p-2 pointer-events-none"
+            style={{
+              transform: `rotate(${qiblaBearing}deg)`,
+              transformOrigin: 'center center'
+            }}
+          >
+            <div className="flex flex-col items-center space-y-1 -mt-1.5">
+              <div className="w-9 h-9 rounded-full bg-emerald-600 text-white font-black flex items-center justify-center text-base shadow-lg shadow-emerald-600/50 border-2 border-white dark:border-slate-900 animate-pulse">
                 🕋
               </div>
-              <Navigation className="w-6 h-6 text-emerald-600 dark:text-emerald-400 fill-emerald-600" />
+              <Navigation className="w-5 h-5 text-emerald-600 dark:text-emerald-400 fill-emerald-600" />
               <div className="w-1.5 h-14 bg-gradient-to-b from-emerald-500 via-emerald-400 to-transparent rounded-full"></div>
             </div>
-
-            {/* Opposing Tail Pointer */}
-            <div className="w-1 h-8 bg-gradient-to-t from-slate-300 dark:from-slate-700 to-transparent rounded-full opacity-40"></div>
           </div>
         </div>
 
-        {/* Center Pivot Point */}
+        {/* Center Pivot Pin */}
         <div className="w-5 h-5 rounded-full bg-slate-900 dark:bg-white border-2 border-emerald-500 z-10 shadow-md"></div>
       </div>
 
