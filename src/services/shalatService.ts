@@ -109,9 +109,19 @@ class ShalatService {
       const data = await res.json()
       if (data && data.address) {
         const addr = data.address
-        const state = addr.state || addr.region || ''
-        const city = addr.city || addr.regency || addr.county || addr.city_district || addr.town || ''
-        return { provinsi: state, kabkota: city }
+        let state = addr.state || addr.region || addr.province || ''
+        let city = addr.city_district || addr.city || addr.regency || addr.county || addr.suburb || addr.town || ''
+
+        // Special handling for DKI Jakarta & Special Regions
+        if (state.toLowerCase().includes('jakarta') || addr['ISO3166-2-lvl4'] === 'ID-JK') {
+          state = 'DKI JAKARTA'
+        } else if (state.toLowerCase().includes('yogyakarta') || addr['ISO3166-2-lvl4'] === 'ID-YO') {
+          state = 'DI YOGYAKARTA'
+        } else if (state.toLowerCase().includes('aceh')) {
+          state = 'ACEH'
+        }
+
+        return { provinsi: state, kabkota: city, displayName: data.display_name }
       }
       return null
     } catch (err) {

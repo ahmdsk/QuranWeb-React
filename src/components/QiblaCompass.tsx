@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Compass, Navigation, MapPin, Smartphone, RefreshCw } from 'lucide-react'
+import { Compass, Navigation, MapPin, Smartphone, RefreshCw, Loader2, Maximize2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { shalatService } from '@/services/shalatService'
 
 interface QiblaCompassProps {
   latitude?: number
@@ -36,10 +38,13 @@ const CITY_COORDINATES: Record<string, { lat: number; lng: number }> = {
   'banda aceh': { lat: 5.5483, lng: 95.3238 }
 }
 
-export const QiblaCompass = ({ latitude, longitude, cityName }: QiblaCompassProps) => {
+export const QiblaCompass = ({ latitude: propLat, longitude: propLng, cityName }: QiblaCompassProps) => {
   const [qiblaBearing, setQiblaBearing] = useState<number>(295)
   const [deviceHeading, setDeviceHeading] = useState<number>(0)
   const [compassSupported, setCompassSupported] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [autoCoords, setAutoCoords] = useState<{ lat?: number; lng?: number }>({ lat: propLat, lng: propLng })
+  const [detectedLocationName, setDetectedLocationName] = useState<string>(cityName || 'Kota Bandung')
 
   // Calculate Qibla angle from coordinates to Kaaba (21.4225° N, 39.8262° E) - Trigonometry Fallback
   const calculateBearingMath = (userLatDeg: number, userLngDeg: number) => {
@@ -59,13 +64,46 @@ export const QiblaCompass = ({ latitude, longitude, cityName }: QiblaCompassProp
     return Math.round(bearing)
   }
 
+  // Get current user location via GPS HTML5 Geolocation API
   useEffect(() => {
-    let lat = latitude
-    let lng = longitude
+    if (propLat !== undefined && propLng !== undefined) {
+      setAutoCoords({ lat: propLat, lng: propLng })
+      setIsLoading(false)
+      return
+    }
+
+    if (navigator.geolocation) {
+      setIsLoading(true)
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const lat = pos.coords.latitude
+          const lng = pos.coords.longitude
+          setAutoCoords({ lat, lng })
+
+          // Reverse Geocode
+          const geoResult = await shalatService.reverseGeocode(lat, lng)
+          if (geoResult && (geoResult.kabkota || geoResult.provinsi)) {
+            setDetectedLocationName(geoResult.kabkota || geoResult.provinsi || 'Lokasi Saya')
+          }
+          setIsLoading(false)
+        },
+        () => {
+          setIsLoading(false)
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+      )
+    } else {
+      setIsLoading(false)
+    }
+  }, [propLat, propLng])
+
+  useEffect(() => {
+    let lat = autoCoords.lat
+    let lng = autoCoords.lng
 
     // Fallback to city coordinates if lat/lng is not passed directly
-    if ((lat === undefined || lng === undefined) && cityName) {
-      const lowerCity = cityName.toLowerCase()
+    if ((lat === undefined || lng === undefined) && detectedLocationName) {
+      const lowerCity = detectedLocationName.toLowerCase()
       const foundCityKey = Object.keys(CITY_COORDINATES).find((key) =>
         lowerCity.includes(key)
       )
@@ -91,11 +129,9 @@ export const QiblaCompass = ({ latitude, longitude, cityName }: QiblaCompassProp
             setQiblaBearing(Math.round(resData.data.direction))
           }
         })
-        .catch(() => {
-          // Silently fallback to offline math calculation
-        })
+        .catch(() => {})
     }
-  }, [latitude, longitude, cityName])
+  }, [autoCoords, detectedLocationName])
 
   const handleOrientation = (event: DeviceOrientationEvent) => {
     let heading: number | null = null
@@ -136,7 +172,6 @@ export const QiblaCompass = ({ latitude, longitude, cityName }: QiblaCompassProp
   // Device Orientation Listener Setup
   useEffect(() => {
     if (typeof window !== 'undefined' && window.DeviceOrientationEvent) {
-      // Auto-listen if requestPermission is not needed (Android & Desktop)
       if (typeof (DeviceOrientationEvent as any).requestPermission !== 'function') {
         window.addEventListener('deviceorientation', handleOrientation, true)
       }
@@ -152,15 +187,28 @@ export const QiblaCompass = ({ latitude, longitude, cityName }: QiblaCompassProp
   const finalRotation = qiblaBearing - deviceHeading
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6 text-center transition-all">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6 text-center transition-all relative overflow-hidden">
       
-      <div className="space-y-1">
+      {/* Full-Screen Page Button Header */}
+      <div className="flex items-center justify-between">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-300/40">
           <Compass className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
           <span>Kompas Kiblat Digital</span>
         </div>
+
+        <Link
+          to="/qibla"
+          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 text-slate-700 dark:text-slate-300 hover:text-emerald-600 text-xs font-bold transition-all border border-slate-200 dark:border-slate-700"
+          title="Buka Layar Penuh Kompas Kiblat"
+        >
+          <Maximize2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+          <span>Layar Penuh</span>
+        </Link>
+      </div>
+
+      <div className="space-y-1">
         <h3 className="text-xl sm:text-2xl font-black font-heading text-slate-900 dark:text-white">
-          Arah Kiblat dari {cityName || 'Kota Bandung'}
+          Arah Kiblat dari {detectedLocationName}
         </h3>
         <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
           Posisi Kiblat Makkah: <strong className="text-emerald-600 dark:text-emerald-400">{qiblaBearing}° Barat Laut</strong> (dari arah Utara)
@@ -170,6 +218,16 @@ export const QiblaCompass = ({ latitude, longitude, cityName }: QiblaCompassProp
       {/* Visual Compass Graphic Container */}
       <div className="relative w-56 h-56 sm:w-64 sm:h-64 mx-auto flex items-center justify-center">
         
+        {/* Loading Overlay */}
+        {isLoading && (
+          <div className="absolute inset-0 z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-full flex flex-col items-center justify-center space-y-2">
+            <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
+            <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+              Mendeteksi Lokasi GPS...
+            </span>
+          </div>
+        )}
+
         {/* Fixed Outer Rose Dial (North, East, South, West) */}
         <div className="absolute inset-0 rounded-full border-4 border-slate-100 dark:border-slate-800 shadow-inner flex items-center justify-center bg-slate-50/50 dark:bg-slate-950/50">
           <span className="absolute top-2.5 text-xs font-black text-red-500 tracking-wider">N</span>

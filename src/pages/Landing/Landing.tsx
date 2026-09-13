@@ -1,46 +1,56 @@
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
   BookOpen,
-  Clock,
+  Calendar,
   Compass,
   MapPin,
-  Moon,
-  Navigation,
-  Sun,
-  Laptop,
-  ChevronDown,
-  Loader2,
-  ArrowRight,
   Search,
-  Check,
   Filter,
-  X
+  Navigation,
+  ChevronDown,
+  Check,
+  X,
+  Loader2,
+  Bookmark,
+  ArrowRight,
+  Sparkles,
+  ExternalLink
 } from 'lucide-react'
-import { useState, useEffect, useRef } from 'react'
-import { shalatService } from '../../services/shalatService'
-import { JadwalShalatData, JadwalShalatItem } from '../../types'
-import { useTheme } from '../../context/ThemeContext'
-import { QiblaCompass } from '@/components/QiblaCompass'
+import { shalatService } from '@/services/shalatService'
+import { JadwalShalatData, JadwalShalatItem } from '@/types'
+import { useApp } from '@/context/AppContext'
+import HeaderHome from '@/components/Home/HeaderHome'
 
-export default function Landing() {
-  const { theme, setTheme, resolvedTheme } = useTheme()
+export const Landing = () => {
+  const { lastRead } = useApp()
 
-  const [provinsiList, setProvinsiList] = useState<string[]>([])
-  const [kabkotaList, setKabkotaList] = useState<string[]>([])
-  const [selectedProvinsi, setSelectedProvinsi] = useState<string>('Jawa Barat')
-  const [selectedKabkota, setSelectedKabkota] = useState<string>('Kota Bandung')
+  // Load initial location from localStorage or default
+  const savedProv = localStorage.getItem('quread_user_provinsi')
+  const savedKab = localStorage.getItem('quread_user_kabkota')
+
+  // State lokasi & filter
+  const [selectedProvinsi, setSelectedProvinsi] = useState<string>(savedProv || 'JAWA BARAT')
+  const [selectedKabkota, setSelectedKabkota] = useState<string>(savedKab || 'KOTA BANDUNG')
   const [selectedBulan, setSelectedBulan] = useState<number>(new Date().getMonth() + 1)
   const [selectedTahun, setSelectedTahun] = useState<number>(new Date().getFullYear())
 
-  // Modal / Dialog Filter State
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState<boolean>(false)
+  const [provinsiList, setProvinsiList] = useState<string[]>([])
+  const [kabkotaList, setKabkotaList] = useState<string[]>([])
 
-  // Dropdown states inside modal
+  const [jadwalData, setJadwalData] = useState<JadwalShalatData | null>(null)
+  const [isLoadingJadwal, setIsLoadingJadwal] = useState<boolean>(false)
+  const [isLoadingKab, setIsLoadingKab] = useState<boolean>(false)
+  const [isLocating, setIsLocating] = useState<boolean>(false)
+  const [locationStatus, setLocationStatus] = useState<string>('')
+  const [userAddressDetail, setUserAddressDetail] = useState<string>('')
+
+  // State Modal Filter
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState<boolean>(false)
   const [openProvDropdown, setOpenProvDropdown] = useState<boolean>(false)
   const [openKabDropdown, setOpenKabDropdown] = useState<boolean>(false)
   const [openBulanDropdown, setOpenBulanDropdown] = useState<boolean>(false)
   const [openTahunDropdown, setOpenTahunDropdown] = useState<boolean>(false)
-  const [openThemeDropdown, setOpenThemeDropdown] = useState<boolean>(false)
 
   const [searchProv, setSearchProv] = useState<string>('')
   const [searchKab, setSearchKab] = useState<string>('')
@@ -49,109 +59,75 @@ export default function Landing() {
   const kabRef = useRef<HTMLDivElement>(null)
   const bulanRef = useRef<HTMLDivElement>(null)
   const tahunRef = useRef<HTMLDivElement>(null)
-  const themeRef = useRef<HTMLDivElement>(null)
 
-  const [jadwalData, setJadwalData] = useState<JadwalShalatData | null>(null)
-  const [todaySchedule, setTodaySchedule] = useState<JadwalShalatItem | null>(null)
+  // Next Prayer Countdown
   const [nextPrayer, setNextPrayer] = useState<{ name: string; time: string; countdown: string } | null>(null)
-  const [currentTime, setCurrentTime] = useState<Date>(new Date())
-
-  // Real-time Digital Clock Effect
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date())
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [])
-
-  const [isLoadingProv, setIsLoadingProv] = useState<boolean>(false)
-  const [isLoadingKab, setIsLoadingKab] = useState<boolean>(false)
-  const [isLoadingJadwal, setIsLoadingJadwal] = useState<boolean>(false)
-  const [isLocating, setIsLocating] = useState<boolean>(false)
-  const [locationStatus, setLocationStatus] = useState<string>('')
-  const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number } | null>(null)
 
   const bulanNames = [
     'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
     'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
   ]
 
+  // Close dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (provRef.current && !provRef.current.contains(e.target as Node)) setOpenProvDropdown(false)
       if (kabRef.current && !kabRef.current.contains(e.target as Node)) setOpenKabDropdown(false)
       if (bulanRef.current && !bulanRef.current.contains(e.target as Node)) setOpenBulanDropdown(false)
       if (tahunRef.current && !tahunRef.current.contains(e.target as Node)) setOpenTahunDropdown(false)
-      if (themeRef.current && !themeRef.current.contains(e.target as Node)) setOpenThemeDropdown(false)
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  // Initial Fetch Provinsi
   useEffect(() => {
-    fetchProvinces()
+    const fetchProv = async () => {
+      const data = await shalatService.getProvinsi()
+      if (data.length > 0) setProvinsiList(data)
+    }
+    fetchProv()
   }, [])
 
+  // Fetch KabKota when Provinsi changes
   useEffect(() => {
-    if (selectedProvinsi) {
-      fetchKabKota(selectedProvinsi)
+    if (!selectedProvinsi) return
+    const fetchKab = async () => {
+      setIsLoadingKab(true)
+      const data = await shalatService.getKabKota(selectedProvinsi)
+      setKabkotaList(data)
+      setIsLoadingKab(false)
+      if (data.length > 0 && !data.includes(selectedKabkota)) {
+        setSelectedKabkota(data[0])
+      }
     }
+    fetchKab()
   }, [selectedProvinsi])
 
+  // Fetch Jadwal Shalat
   useEffect(() => {
-    if (selectedProvinsi && selectedKabkota) {
-      fetchJadwal(selectedProvinsi, selectedKabkota, selectedBulan, selectedTahun)
-    }
+    if (!selectedProvinsi || !selectedKabkota) return
+    fetchJadwal()
   }, [selectedProvinsi, selectedKabkota, selectedBulan, selectedTahun])
 
-  const fetchProvinces = async () => {
-    setIsLoadingProv(true)
-    try {
-      const provs = await shalatService.getProvinsi()
-      if (provs && provs.length > 0) {
-        setProvinsiList(provs)
-        if (!provs.includes(selectedProvinsi)) {
-          setSelectedProvinsi(provs[0])
-        }
-      }
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setIsLoadingProv(false)
-    }
-  }
-
-  const fetchKabKota = async (prov: string) => {
-    setIsLoadingKab(true)
-    try {
-      const kabs = await shalatService.getKabKota(prov)
-      if (kabs && kabs.length > 0) {
-        setKabkotaList(kabs)
-        if (!kabs.includes(selectedKabkota)) {
-          setSelectedKabkota(kabs[0])
-        }
-      }
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setIsLoadingKab(false)
-    }
-  }
-
-  const fetchJadwal = async (prov: string, kab: string, bul: number, thn: number) => {
+  const fetchJadwal = async () => {
     setIsLoadingJadwal(true)
     try {
-      const data = await shalatService.getJadwalShalat(prov, kab, bul, thn)
-      if (data) {
-        setJadwalData(data)
-        const currentDay = new Date().getDate()
-        const foundToday = data.jadwal.find(j => j.tanggal === currentDay) || data.jadwal[0]
-        setTodaySchedule(foundToday)
+      const data = await shalatService.getJadwalShalat(
+        selectedProvinsi,
+        selectedKabkota,
+        selectedBulan,
+        selectedTahun
+      )
+      setJadwalData(data)
+      if (data && data.jadwal) {
+        const todayNum = new Date().getDate()
+        const foundToday = data.jadwal.find((j) => j.tanggal === todayNum) || data.jadwal[0]
         calculateNextPrayer(foundToday)
       }
     } catch (err) {
       console.error(err)
-    } finally {
+    } fontinally: {
       setIsLoadingJadwal(false)
     }
   }
@@ -200,6 +176,78 @@ export default function Landing() {
     })
   }
 
+  // Save selected location to localStorage whenever changed
+  const updateAndSaveLocation = (prov: string, kab: string) => {
+    setSelectedProvinsi(prov)
+    setSelectedKabkota(kab)
+    localStorage.setItem('quread_user_provinsi', prov)
+    localStorage.setItem('quread_user_kabkota', kab)
+  }
+
+  // Initial Auto Geolocation Track on Load (only if not manually saved by user before)
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          handleTrackLocationWithCoords(pos.coords.latitude, pos.coords.longitude)
+        },
+        () => {
+          // Geolocation denied/unavailable, stay with saved or default
+        },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 300000 }
+      )
+    }
+  }, [provinsiList])
+
+  const handleTrackLocationWithCoords = async (latitude: number, longitude: number) => {
+    setIsLocating(true)
+    setLocationStatus('Mencari posisi Anda...')
+
+    const locResult = await shalatService.reverseGeocode(latitude, longitude)
+    setIsLocating(false)
+
+    if (locResult && locResult.provinsi) {
+      const targetProvStr = locResult.provinsi.toLowerCase()
+      const matchedProv = provinsiList.find(p => {
+        const pLower = p.toLowerCase()
+        return pLower.includes(targetProvStr) || targetProvStr.includes(pLower) ||
+               (targetProvStr.includes('jakarta') && pLower.includes('jakarta'))
+      })
+
+      if (matchedProv) {
+        let matchedKabName = ''
+        const kabs = await shalatService.getKabKota(matchedProv)
+        if (kabs.length > 0) {
+          setKabkotaList(kabs)
+          if (locResult.kabkota) {
+            const targetKabStr = locResult.kabkota.toLowerCase().replace(/kota|kabupaten|kab\./gi, '').trim()
+            const matchedKab = kabs.find(k => {
+              const kClean = k.toLowerCase().replace(/kota|kabupaten|kab\./gi, '').trim()
+              return kClean.includes(targetKabStr) || targetKabStr.includes(kClean)
+            })
+            if (matchedKab) {
+              matchedKabName = matchedKab
+            } else {
+              matchedKabName = kabs[0]
+            }
+          } else {
+            matchedKabName = kabs[0]
+          }
+        }
+        updateAndSaveLocation(matchedProv, matchedKabName || selectedKabkota)
+        if (locResult.displayName) {
+          setUserAddressDetail(locResult.displayName)
+        }
+        setLocationStatus(`Lokasi Presisi: ${matchedKabName || selectedKabkota}`)
+      } else {
+        setLocationStatus('Silakan pilih provinsi Anda dari daftar.')
+      }
+    } else {
+      setLocationStatus('Gagal mendeteksi wilayah secara presisi.')
+    }
+    setTimeout(() => setLocationStatus(''), 6000)
+  }
+
   const handleTrackLocation = () => {
     if (!navigator.geolocation) {
       setLocationStatus('Browser tidak mendukung GPS')
@@ -210,366 +258,288 @@ export default function Landing() {
     setLocationStatus('Mencari posisi Anda...')
 
     navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords
-        setUserCoords({ latitude, longitude })
-        const locResult = await shalatService.reverseGeocode(latitude, longitude)
-        setIsLocating(false)
-
-        if (locResult && locResult.provinsi) {
-          const matchedProv = provinsiList.find(p =>
-            p.toLowerCase().includes(locResult.provinsi!.toLowerCase()) ||
-            locResult.provinsi!.toLowerCase().includes(p.toLowerCase())
-          )
-
-          if (matchedProv) {
-            setSelectedProvinsi(matchedProv)
-            setLocationStatus(`Terdeteksi: ${matchedProv}`)
-            const kabs = await shalatService.getKabKota(matchedProv)
-            if (kabs.length > 0) {
-              setKabkotaList(kabs)
-              if (locResult.kabkota) {
-                const matchedKab = kabs.find(k =>
-                  k.toLowerCase().includes(locResult.kabkota!.toLowerCase()) ||
-                  locResult.kabkota!.toLowerCase().includes(k.toLowerCase())
-                )
-                if (matchedKab) setSelectedKabkota(matchedKab)
-                else setSelectedKabkota(kabs[0])
-              } else {
-                setSelectedKabkota(kabs[0])
-              }
-            }
-          } else {
-            setLocationStatus('Silakan pilih provinsi Anda dari daftar.')
-          }
-        } else {
-          setLocationStatus('Gagal mendeteksi wilayah secara presisi.')
-        }
-        setTimeout(() => setLocationStatus(''), 4000)
+      (position) => {
+        handleTrackLocationWithCoords(position.coords.latitude, position.coords.longitude)
       },
-      (error) => {
+      () => {
         setIsLocating(false)
-        console.error(error)
         setLocationStatus('Akses GPS ditolak.')
-        setTimeout(() => setLocationStatus(''), 4000)
       },
-      { timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
     )
   }
 
   const filteredProvList = provinsiList.filter(p => p.toLowerCase().includes(searchProv.toLowerCase()))
   const filteredKabList = kabkotaList.filter(k => k.toLowerCase().includes(searchKab.toLowerCase()))
 
+  const todayNum = new Date().getDate()
+  const todaySchedule = jadwalData?.jadwal.find(j => j.tanggal === todayNum) || jadwalData?.jadwal[0]
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#070c18] text-slate-800 dark:text-slate-100 font-sans selection:bg-emerald-500 selection:text-white transition-colors duration-200">
-      
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-[#070c18]/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800/80 transition-colors">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-bold shadow-md">
-              <BookOpen className="h-5 w-5" />
-            </div>
-            <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white font-heading">
-              Qu<span className="text-emerald-600 dark:text-emerald-400">read</span>
-            </span>
-          </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
+      <HeaderHome />
 
-          <nav className="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-600 dark:text-slate-300">
-            <a href="#jadwal" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Jadwal Shalat</a>
-            <a href="#fitur" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Fitur</a>
-            <a href="#quran" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Al-Qur'an</a>
-          </nav>
+      {/* HERO BANNER SECTION */}
+      <section className="relative overflow-hidden pt-8 pb-16 md:pt-14 md:pb-24 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-b from-emerald-900 via-slate-900 to-slate-950 text-white">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-emerald-500/20 via-transparent to-transparent opacity-60"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
-          <div className="flex items-center space-x-3">
-            {/* Theme Selector */}
-            <div className="relative" ref={themeRef}>
-              <button
-                type="button"
-                onClick={() => setOpenThemeDropdown(!openThemeDropdown)}
-                className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5 text-xs font-semibold"
-                title="Pilih Mode Tema"
-              >
-                {resolvedTheme === 'dark' ? (
-                  <Moon className="w-4 h-4 text-emerald-400" />
-                ) : (
-                  <Sun className="w-4 h-4 text-amber-500" />
-                )}
-                <span className="capitalize hidden sm:inline">{theme}</span>
-                <ChevronDown className="w-3 h-3 text-slate-400" />
-              </button>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
 
-              {openThemeDropdown && (
-                <div className="absolute right-0 mt-2 w-36 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 p-1.5 space-y-1">
-                  <button
-                    onClick={() => { setTheme('light'); setOpenThemeDropdown(false) }}
-                    className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-left ${theme === 'light' ? 'bg-emerald-50 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
-                  >
-                    <Sun className="w-3.5 h-3.5 text-amber-500" /> Light Mode
-                  </button>
-                  <button
-                    onClick={() => { setTheme('dark'); setOpenThemeDropdown(false) }}
-                    className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-left ${theme === 'dark' ? 'bg-emerald-50 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
-                  >
-                    <Moon className="w-3.5 h-3.5 text-emerald-400" /> Dark Mode
-                  </button>
-                  <button
-                    onClick={() => { setTheme('system'); setOpenThemeDropdown(false) }}
-                    className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-left ${theme === 'system' ? 'bg-emerald-50 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
-                  >
-                    <Laptop className="w-3.5 h-3.5 text-slate-500" /> System Default
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <Link
-              to="/home"
-              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-all flex items-center gap-1.5 shadow-md shadow-emerald-600/20"
-            >
-              Baca Qur'an
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <section className="py-12 md:py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-          
-          <div className="lg:col-span-7 space-y-6">
-            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight text-slate-900 dark:text-white font-heading">
-              Al-Qur'an Digital & <br />
-              <span className="text-emerald-600 dark:text-emerald-400">
-                Waktu Shalat Otomatis
-              </span>
-            </h1>
-
-            <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed max-w-xl">
-              Platform Al-Qur'an digital yang bersih, modern, dan responsif. Memudahkan Anda membaca ayat suci Al-Qur'an serta memantau waktu shalat presisi untuk seluruh wilayah kabupaten dan kota di Indonesia.
-            </p>
-
-            <div className="flex flex-wrap gap-3 pt-2">
-              <button
-                onClick={() => setIsFilterModalOpen(true)}
-                className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md shadow-emerald-600/20 flex items-center gap-2"
-              >
-                <Filter className="w-4 h-4" />
-                Ubah Lokasi & Waktu
-              </button>
-              <button
-                onClick={handleTrackLocation}
-                disabled={isLocating}
-                className="px-5 py-2.5 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-bold transition-all flex items-center gap-2"
-              >
-                <Navigation className="w-4 h-4 text-emerald-400" />
-                {isLocating ? 'Deteksi GPS...' : 'Lokasi Saya'}
-              </button>
-            </div>
-          </div>
-
-          {/* Right Hero Card Spotlight */}
-          <div className="lg:col-span-5">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xl space-y-4 relative">
-              
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5 font-heading">
-                    <MapPin className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    {selectedKabkota}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">{selectedProvinsi}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setIsFilterModalOpen(true)}
-                    className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
-                    title="Ubah Filter Lokasi & Waktu"
-                  >
-                    <Filter className="w-4 h-4" />
-                  </button>
-                  <span className="text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800/60">
-                    {todaySchedule?.hari || 'Hari Ini'}
-                  </span>
-                </div>
+            {/* Left Content */}
+            <div className="lg:col-span-7 space-y-6 text-left">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30 backdrop-blur-md">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Al-Qur'an & Jadwal Shalat Digital Terlengkap</span>
               </div>
 
-              {/* Real-time Digital Clock Display */}
-              <div className="bg-emerald-500/10 dark:bg-emerald-950/40 border border-emerald-500/20 dark:border-emerald-800/40 p-3 rounded-xl flex items-center justify-between">
-                <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-semibold text-xs">
-                  <Clock className="w-4 h-4 text-emerald-600 dark:text-emerald-400 animate-pulse" />
-                  <span>Waktu Sekarang</span>
-                </div>
-                <div className="text-right font-mono font-extrabold text-lg text-emerald-700 dark:text-emerald-300 tracking-wider">
-                  {currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-emerald-600 text-white">{shalatService.getTimeZone(selectedProvinsi)}</span>
-                </div>
-              </div>
+              <h1 className="text-3xl sm:text-5xl font-black font-heading tracking-tight leading-tight">
+                Membawa Keberkahan <br />
+                <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-200 bg-clip-text text-transparent">
+                  Dalam Setiap Bacaan Ayat
+                </span>
+              </h1>
 
-              {nextPrayer && (
-                <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl flex items-center justify-between">
-                  <div>
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">Shalat Berikutnya</span>
-                    <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400 font-heading">{nextPrayer.name}</span>
-                    <span className="text-xs text-slate-600 dark:text-slate-300 block font-mono">{nextPrayer.time} {shalatService.getTimeZone(selectedProvinsi)}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-semibold">Sisa Waktu</span>
-                    <span className="text-sm font-bold font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-3 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800/80 inline-block mt-0.5">
-                      {nextPrayer.countdown}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { name: 'Subuh', time: todaySchedule?.subuh },
-                  { name: 'Dzuhur', time: todaySchedule?.dzuhur },
-                  { name: 'Ashar', time: todaySchedule?.ashar },
-                  { name: 'Maghrib', time: todaySchedule?.maghrib },
-                  { name: 'Isya', time: todaySchedule?.isya },
-                  { name: 'Imsak', time: todaySchedule?.imsak }
-                ].map((item, idx) => (
-                  <div key={idx} className="bg-slate-50 dark:bg-slate-950 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800/80 text-center">
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block uppercase">{item.name}</span>
-                    <span className="text-sm font-bold font-mono text-slate-800 dark:text-slate-200">
-                      {item.time || '--:--'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* JADWAL SHALAT BULANAN SECTION */}
-      <section id="jadwal" className="py-14 bg-slate-100 dark:bg-[#050914] border-t border-b border-slate-200 dark:border-slate-800/80 transition-colors">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-          
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight font-heading">Jadwal Shalat Bulanan</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Menampilkan jadwal untuk {selectedKabkota}, {selectedProvinsi} ({bulanNames[selectedBulan - 1]} {selectedTahun})
+              <p className="text-slate-300 text-sm sm:text-base max-w-xl font-normal leading-relaxed">
+                Platform ibadah harian digital Indonesia dengan fitur Al-Qur'an lengkap, pencarian juz & surah, kompas kiblat digital presisi, dan jadwal shalat terupdate.
               </p>
+
+              {/* Action Buttons */}
+              <div className="pt-2 flex flex-wrap items-center gap-3">
+                <Link
+                  to="/home"
+                  className="px-6 py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm transition-all shadow-lg shadow-emerald-500/30 flex items-center gap-2"
+                >
+                  <BookOpen className="w-4 h-4 fill-slate-950" />
+                  <span>Mulai Baca Al-Qur'an</span>
+                </Link>
+
+                <Link
+                  to="/qibla"
+                  className="px-5 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-sm backdrop-blur-md transition-all border border-white/10 flex items-center gap-2"
+                >
+                  <Compass className="w-4 h-4 text-emerald-400" />
+                  <span>Kompas Kiblat Presisi</span>
+                </Link>
+              </div>
+
+              {/* Last Read Quick Widget */}
+              {lastRead && (
+                <div className="pt-2">
+                  <Link
+                    to={`/surah/${lastRead.id}?verse=${lastRead.verseNumber || 1}#verse-${lastRead.verseNumber || 1}`}
+                    className="inline-flex items-center gap-3 p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 text-white hover:bg-white/15 transition-all text-xs"
+                  >
+                    <Bookmark className="w-4 h-4 text-amber-400 fill-amber-400" />
+                    <div>
+                      <span className="text-[10px] text-emerald-300 font-semibold block">Lanjutkan Bacaan Terakhir:</span>
+                      <strong className="font-bold">{lastRead.name} (Ayat {lastRead.verseNumber || 1})</strong>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-slate-300 ml-2" />
+                  </Link>
+                </div>
+              )}
             </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsFilterModalOpen(true)}
-                className="px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-2 shadow-sm"
-              >
-                <Filter className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                Ubah Lokasi
-              </button>
+            {/* Right Card Widget: Waktu Shalat Hari Ini */}
+            <div className="lg:col-span-5">
+              <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-2xl text-white space-y-5">
 
-              <button
-                onClick={handleTrackLocation}
-                disabled={isLocating}
-                className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all flex items-center gap-2 shadow-md"
-              >
-                <Navigation className="w-4 h-4" />
-                {isLocating ? 'Deteksi GPS...' : 'GPS Lokasi Saya'}
-              </button>
-            </div>
-          </div>
+                <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                  <div className="flex items-center gap-2.5 overflow-hidden">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
+                      <MapPin className="w-4 h-4 text-emerald-400" />
+                    </div>
+                    <div className="overflow-hidden">
+                      <h3 className="text-sm font-bold truncate max-w-[200px]">{selectedKabkota}</h3>
+                      <p className="text-[10px] text-emerald-300 truncate max-w-[200px]" title={userAddressDetail || selectedProvinsi}>
+                        {userAddressDetail || selectedProvinsi}
+                      </p>
+                    </div>
+                  </div>
 
-          {locationStatus && (
-            <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 text-xs rounded-xl flex items-center gap-2">
-              <Compass className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>{locationStatus}</span>
-            </div>
-          )}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      onClick={handleTrackLocation}
+                      disabled={isLocating}
+                      className="px-2.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition-all flex items-center gap-1 shadow-sm"
+                      title="Deteksi ulang posisi GPS Saya"
+                    >
+                      <Navigation className={`w-3 h-3 ${isLocating ? 'animate-spin' : ''}`} />
+                      <span className="hidden sm:inline">{isLocating ? 'GPS...' : 'Lokasi Saya'}</span>
+                    </button>
 
-          {/* Table Results */}
-          {isLoadingJadwal ? (
-            <div className="py-12 text-center text-slate-500 dark:text-slate-400 text-xs flex justify-center items-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
-              Memuat data jadwal shalat...
-            </div>
-          ) : jadwalData ? (
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 overflow-x-auto shadow-sm">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold uppercase">
-                    <th className="py-3 px-3">Tgl</th>
-                    <th className="py-3 px-3">Hari</th>
-                    <th className="py-3 px-3 text-slate-400">Imsak</th>
-                    <th className="py-3 px-3 text-emerald-600 dark:text-emerald-400">Subuh</th>
-                    <th className="py-3 px-3">Terbit</th>
-                    <th className="py-3 px-3">Dhuha</th>
-                    <th className="py-3 px-3">Dzuhur</th>
-                    <th className="py-3 px-3 text-emerald-600 dark:text-emerald-400">Ashar</th>
-                    <th className="py-3 px-3 text-emerald-600 dark:text-emerald-400">Maghrib</th>
-                    <th className="py-3 px-3">Isya</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 font-mono">
-                  {jadwalData.jadwal.map((item) => {
-                    const todayDate = new Date()
-                    const isToday =
-                      item.tanggal === todayDate.getDate() &&
-                      selectedBulan === todayDate.getMonth() + 1 &&
-                      selectedTahun === todayDate.getFullYear()
+                    <button
+                      onClick={() => setIsFilterModalOpen(true)}
+                      className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold transition-all flex items-center gap-1 border border-white/10"
+                      title="Ganti Kota & Filter"
+                    >
+                      <Filter className="w-3 h-3 text-emerald-400" />
+                      <span className="hidden sm:inline">Filter</span>
+                    </button>
+                  </div>
+                </div>
 
-                    return (
-                      <tr
-                        key={item.tanggal}
-                        className={`hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-all ${
-                          isToday
-                            ? 'bg-emerald-100/80 dark:bg-emerald-950/80 text-emerald-950 dark:text-emerald-300 font-extrabold border-l-4 border-l-emerald-600 shadow-sm'
-                            : 'text-slate-700 dark:text-slate-300'
-                        }`}
+                {/* Countdown Box */}
+                {nextPrayer && (
+                  <div className="bg-emerald-500/20 border border-emerald-500/40 rounded-2xl p-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-emerald-300 font-bold">Waktu Shalat Berikutnya</p>
+                      <h4 className="text-xl font-black text-white">{nextPrayer.name} • {nextPrayer.time}</h4>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs font-bold text-emerald-200 block">Sisa Waktu</span>
+                      <span className="text-sm font-black font-mono bg-emerald-600 px-2.5 py-1 rounded-lg text-white">
+                        {nextPrayer.countdown}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Shalat Schedule Today Grid */}
+                {todaySchedule ? (
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 pt-1 text-center font-mono">
+                    {[
+                      { name: 'Subuh', time: todaySchedule.subuh },
+                      { name: 'Dhuha', time: todaySchedule.dhuha },
+                      { name: 'Dzuhur', time: todaySchedule.dzuhur },
+                      { name: 'Ashar', time: todaySchedule.ashar },
+                      { name: 'Maghrib', time: todaySchedule.maghrib },
+                      { name: 'Isya', time: todaySchedule.isya }
+                    ].map((p) => (
+                      <div
+                        key={p.name}
+                        className={`p-2 rounded-xl border text-xs transition-all ${nextPrayer?.name === p.name
+                            ? 'bg-emerald-500 text-slate-950 font-black border-emerald-400 shadow-md scale-105'
+                            : 'bg-white/5 border-white/10 text-slate-200 font-medium'
+                          }`}
                       >
-                        <td className="py-3 px-3 font-sans flex items-center gap-2">
-                          <span>{item.tanggal}</span>
-                          {isToday && (
-                            <span className="text-[9px] uppercase font-black px-2 py-0.5 rounded-md bg-emerald-600 text-white shadow-xs">
-                              Hari Ini
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-3 px-3 font-sans">{item.hari}</td>
-                        <td className="py-3 px-3 text-slate-500 dark:text-slate-400">{item.imsak}</td>
-                        <td className="py-3 px-3 text-emerald-700 dark:text-emerald-400 font-semibold">{item.subuh}</td>
-                        <td className="py-3 px-3">{item.terbit}</td>
-                        <td className="py-3 px-3">{item.dhuha}</td>
-                        <td className="py-3 px-3">{item.dzuhur}</td>
-                        <td className="py-3 px-3 text-emerald-700 dark:text-emerald-400 font-semibold">{item.ashar}</td>
-                        <td className="py-3 px-3 text-emerald-700 dark:text-emerald-400 font-semibold">{item.maghrib}</td>
-                        <td className="py-3 px-3">{item.isya}</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ) : null}
+                        <span className="block text-[10px] font-sans text-slate-300">{p.name}</span>
+                        <span className="font-bold">{p.time}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-6 text-center text-xs text-slate-300 flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+                    <span>Memuat Jadwal Hari Ini...</span>
+                  </div>
+                )}
 
-          {/* QIBLA COMPASS SECTION */}
-          <div className="pt-6" id="shalat">
-            <QiblaCompass
-              latitude={userCoords?.latitude}
-              longitude={userCoords?.longitude}
-              cityName={selectedKabkota}
-            />
+              </div>
+            </div>
+
           </div>
 
         </div>
       </section>
 
-      {/* QUICK SURAH SECTION */}
-      <section id="quran" className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* FEATURE CARDS NAVIGATION SECTION (RINGKAS & TERARAH) */}
+      <section className="py-14 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="text-center space-y-2 max-w-2xl mx-auto">
+          <span className="text-xs font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800/60">
+            Fitur Utama Quread
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-black font-heading text-slate-900 dark:text-white">
+            Layanan Ibadah Digital Terpadu
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            Akses langsung ke berbagai fitur unggulan harian untuk menemani ibadah Anda di mana saja.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+          {/* Card 1: Baca Al-Qur'an */}
+          <Link
+            to="/home"
+            className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-xl transition-all space-y-4 flex flex-col justify-between"
+          >
+            <div className="space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-center group-hover:scale-110 transition-transform">
+                <BookOpen className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-xl font-bold font-heading text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors flex items-center gap-2">
+                  <span>Baca Al-Qur'an 30 Juz</span>
+                  <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-emerald-500" />
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Lengkap 114 Surah dengan teks Arab, latin, terjemahan Indonesia, audio murottal merdu, & penanda ayat.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs font-bold text-emerald-600 dark:text-emerald-400">
+              <span>Jelajahi Surah</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+          {/* Card 2: Jadwal Shalat Bulanan */}
+          <div
+            onClick={() => setIsFilterModalOpen(true)}
+            className="group cursor-pointer bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-xl transition-all space-y-4 flex flex-col justify-between"
+          >
+            <div className="space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-teal-100 dark:bg-teal-950/80 text-teal-600 dark:text-teal-400 font-bold flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Calendar className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-xl font-bold font-heading text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors flex items-center gap-2">
+                  <span>Jadwal Shalat Bulanan</span>
+                  <Filter className="w-4 h-4 text-emerald-500" />
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Jadwal waktu shalat lengkap seluruh kota di Indonesia (Subuh, Dzuhur, Ashar, Maghrib, Isya & Imsak).
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs font-bold text-emerald-600 dark:text-emerald-400">
+              <span>Buka Filter Kota ({selectedKabkota})</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </div>
+
+          {/* Card 3: Kompas Kiblat Layar Penuh */}
+          <Link
+            to="/qibla"
+            className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-xl transition-all space-y-4 flex flex-col justify-between"
+          >
+            <div className="space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 font-bold flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Compass className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-xl font-bold font-heading text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors flex items-center gap-2">
+                  <span>Kompas Kiblat Presisi</span>
+                  <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-emerald-500" />
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Deteksi otomatis arah Kaaba Makkah dengan sensor gyroscope & koordinat GPS presisi di layar penuh.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs font-bold text-emerald-600 dark:text-emerald-400">
+              <span>Buka Kompas Full Screen</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+        </div>
+      </section>
+
+      {/* QUICK SURAH POPULER ROW */}
+      <section className="py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-slate-200 dark:border-slate-800">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white font-heading">Baca Al-Qur'an Online</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Pilihan surah populer</p>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white font-heading">Surah Pilihan Populer</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Akses cepat bacaan rutin harian</p>
           </div>
           <Link to="/home" className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1">
-            Semua Surah <ArrowRight className="w-3 h-3" />
+            Lihat Semua <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
 
@@ -583,7 +553,7 @@ export default function Landing() {
             <Link
               key={s.id}
               to={`/surah/${s.id}`}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 p-4 rounded-xl flex items-center justify-between transition-all shadow-sm hover:shadow-md"
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 p-4 rounded-2xl flex items-center justify-between transition-all shadow-sm hover:shadow-md"
             >
               <div className="flex items-center space-x-3">
                 <span className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 font-bold text-xs flex items-center justify-center">
@@ -600,16 +570,16 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* FILTER MODAL DIALOG */}
+      {/* FILTER MODAL DIALOG (Termasuk Tabel Jadwal Bulanan saat dibuka) */}
       {isFilterModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl p-6 space-y-5 relative">
-            
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl p-6 sm:p-8 space-y-6 relative">
+
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
               <div className="flex items-center gap-2">
-                <Filter className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <Calendar className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white font-heading">
-                  Filter Wilayah & Periode
+                  Jadwal Shalat Bulanan ({selectedKabkota})
                 </h3>
               </div>
               <button
@@ -620,8 +590,9 @@ export default function Landing() {
               </button>
             </div>
 
-            <div className="space-y-4">
-              
+            {/* Filter Controls Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+
               {/* Provinsi Combobox */}
               <div className="space-y-1.5 relative" ref={provRef}>
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 block">
@@ -637,12 +608,8 @@ export default function Landing() {
                   }}
                   className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 text-left rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between transition-all"
                 >
-                  <span className="truncate">{selectedProvinsi || 'Pilih Provinsi'}</span>
-                  {isLoadingProv ? (
-                    <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
-                  ) : (
-                    <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${openProvDropdown ? 'rotate-180' : ''}`} />
-                  )}
+                  <span className="truncate">{selectedProvinsi}</span>
+                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${openProvDropdown ? 'rotate-180' : ''}`} />
                 </button>
 
                 {openProvDropdown && (
@@ -750,15 +717,15 @@ export default function Landing() {
                       <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
                     </button>
                     {openBulanDropdown && (
-                      <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden p-1 max-h-40 overflow-y-auto custom-scrollbar">
-                        {bulanNames.map((b, idx) => (
+                      <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl max-h-40 overflow-y-auto p-1.5 space-y-1">
+                        {bulanNames.map((name, idx) => (
                           <button
-                            key={b}
+                            key={name}
                             type="button"
                             onClick={() => { setSelectedBulan(idx + 1); setOpenBulanDropdown(false) }}
                             className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium ${selectedBulan === idx + 1 ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                           >
-                            {b}
+                            {name}
                           </button>
                         ))}
                       </div>
@@ -775,7 +742,7 @@ export default function Landing() {
                       <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
                     </button>
                     {openTahunDropdown && (
-                      <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden p-1">
+                      <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl max-h-40 overflow-y-auto p-1.5 space-y-1">
                         {[2025, 2026, 2027].map((y) => (
                           <button
                             key={y}
@@ -794,23 +761,100 @@ export default function Landing() {
 
             </div>
 
-            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+            {/* GPS Location Auto Track Bar */}
+            <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-950 p-3 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                <Navigation className="w-4 h-4 text-emerald-500" />
+                {locationStatus || 'Lokasi otomatis melalui GPS'}
+              </span>
+
               <button
                 type="button"
                 onClick={handleTrackLocation}
                 disabled={isLocating}
-                className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all flex items-center gap-1.5"
+                className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-sm"
               >
-                <Navigation className="w-3.5 h-3.5 text-emerald-500" />
                 {isLocating ? 'Deteksi GPS...' : 'Gunakan GPS'}
               </button>
+            </div>
 
+            {/* Monthly Prayer Table inside Modal */}
+            <div className="space-y-3 pt-2">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Tabel Jadwal Shalat {bulanNames[selectedBulan - 1]} {selectedTahun}
+              </h4>
+
+              {isLoadingJadwal ? (
+                <div className="py-12 text-center text-slate-500 dark:text-slate-400 text-xs flex justify-center items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
+                  Memuat data jadwal shalat...
+                </div>
+              ) : jadwalData ? (
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2 overflow-x-auto shadow-inner">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold uppercase">
+                        <th className="py-2.5 px-3">Tgl</th>
+                        <th className="py-2.5 px-3">Hari</th>
+                        <th className="py-2.5 px-3 text-slate-400">Imsak</th>
+                        <th className="py-2.5 px-3 text-emerald-600 dark:text-emerald-400">Subuh</th>
+                        <th className="py-2.5 px-3">Terbit</th>
+                        <th className="py-2.5 px-3">Dhuha</th>
+                        <th className="py-2.5 px-3">Dzuhur</th>
+                        <th className="py-2.5 px-3 text-emerald-600 dark:text-emerald-400">Ashar</th>
+                        <th className="py-2.5 px-3 text-emerald-600 dark:text-emerald-400">Maghrib</th>
+                        <th className="py-2.5 px-3">Isya</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 font-mono">
+                      {jadwalData.jadwal.map((item) => {
+                        const todayDate = new Date()
+                        const isToday =
+                          item.tanggal === todayDate.getDate() &&
+                          selectedBulan === todayDate.getMonth() + 1 &&
+                          selectedTahun === todayDate.getFullYear()
+
+                        return (
+                          <tr
+                            key={item.tanggal}
+                            className={`hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-all ${isToday
+                                ? 'bg-emerald-100/80 dark:bg-emerald-950/80 text-emerald-950 dark:text-emerald-300 font-extrabold border-l-4 border-l-emerald-600'
+                                : 'text-slate-700 dark:text-slate-300'
+                              }`}
+                          >
+                            <td className="py-2.5 px-3 font-sans flex items-center gap-2">
+                              <span>{item.tanggal}</span>
+                              {isToday && (
+                                <span className="text-[9px] uppercase font-black px-1.5 py-0.5 rounded-md bg-emerald-600 text-white">
+                                  Hari Ini
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-2.5 px-3 font-sans">{item.hari}</td>
+                            <td className="py-2.5 px-3 text-slate-500 dark:text-slate-400">{item.imsak}</td>
+                            <td className="py-2.5 px-3 text-emerald-700 dark:text-emerald-400 font-semibold">{item.subuh}</td>
+                            <td className="py-2.5 px-3">{item.terbit}</td>
+                            <td className="py-2.5 px-3">{item.dhuha}</td>
+                            <td className="py-2.5 px-3">{item.dzuhur}</td>
+                            <td className="py-2.5 px-3 text-emerald-700 dark:text-emerald-400 font-semibold">{item.ashar}</td>
+                            <td className="py-2.5 px-3 text-emerald-700 dark:text-emerald-400 font-semibold">{item.maghrib}</td>
+                            <td className="py-2.5 px-3">{item.isya}</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
               <button
                 type="button"
                 onClick={() => setIsFilterModalOpen(false)}
                 className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md"
               >
-                Tampilkan Jadwal
+                Tutup Jadwal
               </button>
             </div>
 
@@ -818,7 +862,7 @@ export default function Landing() {
         </div>
       )}
 
-      {/* Footer */}
+      {/* FOOTER */}
       <footer className="border-t border-slate-200 dark:border-slate-800 py-8 text-center text-xs text-slate-500">
         <p>&copy; {new Date().getFullYear()} Quread. Platform Al-Qur'an & Jadwal Shalat Digital Indonesia.</p>
       </footer>
@@ -826,3 +870,5 @@ export default function Landing() {
     </div>
   )
 }
+
+export default Landing
