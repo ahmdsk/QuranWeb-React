@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom'
 import {
   BookOpen,
-  Calendar,
   Clock,
   Compass,
   MapPin,
@@ -21,6 +20,7 @@ import { useState, useEffect, useRef } from 'react'
 import { shalatService } from '../../services/shalatService'
 import { JadwalShalatData, JadwalShalatItem } from '../../types'
 import { useTheme } from '../../context/ThemeContext'
+import { QiblaCompass } from '@/components/QiblaCompass'
 
 export default function Landing() {
   const { theme, setTheme, resolvedTheme } = useTheme()
@@ -69,8 +69,7 @@ export default function Landing() {
   const [isLoadingJadwal, setIsLoadingJadwal] = useState<boolean>(false)
   const [isLocating, setIsLocating] = useState<boolean>(false)
   const [locationStatus, setLocationStatus] = useState<string>('')
-
-  const [showMonthlyView, setShowMonthlyView] = useState<boolean>(false)
+  const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number } | null>(null)
 
   const bulanNames = [
     'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
@@ -213,6 +212,7 @@ export default function Landing() {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords
+        setUserCoords({ latitude, longitude })
         const locResult = await shalatService.reverseGeocode(latitude, longitude)
         setIsLocating(false)
 
@@ -548,6 +548,15 @@ export default function Landing() {
               </table>
             </div>
           ) : null}
+
+          {/* QIBLA COMPASS SECTION */}
+          <div className="pt-6" id="shalat">
+            <QiblaCompass
+              latitude={userCoords?.latitude}
+              longitude={userCoords?.longitude}
+              cityName={selectedKabkota}
+            />
+          </div>
 
         </div>
       </section>

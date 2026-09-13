@@ -1,8 +1,7 @@
-import { Moon, Sun, Laptop, ChevronDown, BookOpen, User, LogOut } from 'lucide-react'
+import { Moon, Sun, Laptop, ChevronDown, BookOpen, User } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { useTheme } from '../../context/ThemeContext'
 import SearchDialog from '../SearchDialog'
-import { supabase } from '../../lib/supabaseClient'
 import { Link, useNavigate } from 'react-router-dom'
 import { useState, useRef, useEffect } from 'react'
 
@@ -11,22 +10,12 @@ const HeaderHome = () => {
     const { currentUser } = useApp()
     const { theme, setTheme, resolvedTheme } = useTheme()
     const [openThemeDropdown, setOpenThemeDropdown] = useState(false)
-    const [openUserDropdown, setOpenUserDropdown] = useState(false)
     const themeRef = useRef<HTMLDivElement>(null)
-    const userRef = useRef<HTMLDivElement>(null)
-
-    const handleLogout = async () => {
-        await supabase.auth.signOut()
-        setOpenUserDropdown(false)
-    }
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             if (themeRef.current && !themeRef.current.contains(e.target as Node)) {
                 setOpenThemeDropdown(false)
-            }
-            if (userRef.current && !userRef.current.contains(e.target as Node)) {
-                setOpenUserDropdown(false)
             }
         }
         document.addEventListener('mousedown', handleClickOutside)

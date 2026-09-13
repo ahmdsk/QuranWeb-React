@@ -237,7 +237,7 @@ export const ProfilePage = () => {
 
                     <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2">
                       <button
-                        onClick={() => navigate(`/surah/${bm.id}`)}
+                        onClick={() => navigate(`/surah/${bm.id}?verse=${bm.verseNumber || 1}#verse-${bm.verseNumber || 1}`)}
                         className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors"
                       >
                         <span>Lanjutkan Baca</span>

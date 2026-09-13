@@ -50,7 +50,7 @@ export const BottomNav = () => {
             <button
               onClick={() => {
                 setIsProfileMenuOpen(false)
-                navigate(`/surah/${lastRead.id}`)
+                navigate(`/surah/${lastRead.id}?verse=${lastRead.verseNumber || 1}#verse-${lastRead.verseNumber || 1}`)
               }}
               className="w-full flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors"
             >

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { ChevronLeft, Play, Pause, UserCheck, ArrowLeft, ArrowRight, Bookmark } from 'lucide-react'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { ChevronLeft, Play, Pause, UserCheck, ArrowLeft, ArrowRight, Bookmark, Copy, Share2 } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import type { Surah, Verse } from '../../types'
 import { quranService } from '../../services/quranService'
@@ -10,6 +10,7 @@ import HeaderHome from '../../components/Home/HeaderHome'
 const DetailSurah = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const { bookmarks, toggleBookmark, currentUser } = useApp()
 
   const [surah, setSurah] = useState<Surah | null>(null)
@@ -35,6 +36,29 @@ const DetailSurah = () => {
   const showToast = (msg: string) => {
     setToastMessage(msg)
     setTimeout(() => setToastMessage(null), 3000)
+  }
+
+  const handleCopyVerse = (verse: Verse) => {
+    if (!surah) return
+    const textToCopy = `[${surah.namaLatin} Ayat ${verse.nomorAyat}]\n\n${verse.teksArab}\n\n"${verse.teksIndonesia}"\n\n- Dibaca via Quread Web App`
+    navigator.clipboard.writeText(textToCopy)
+    showToast(`Ayat ${verse.nomorAyat} disalin ke clipboard!`)
+  }
+
+  const handleShareVerse = (verse: Verse) => {
+    if (!surah) return
+    const shareData = {
+      title: `${surah.namaLatin} Ayat ${verse.nomorAyat} - Quread`,
+      text: `${surah.namaLatin} Ayat ${verse.nomorAyat}\n${verse.teksArab}\n\n"${verse.teksIndonesia}"`,
+      url: window.location.href
+    }
+
+    if (navigator.share) {
+      navigator.share(shareData).catch(() => {})
+    } else {
+      navigator.clipboard.writeText(`${shareData.text}\n\n${shareData.url}`)
+      showToast('Link sharing disalin ke clipboard!')
+    }
   }
 
   useEffect(() => {
@@ -65,6 +89,28 @@ const DetailSurah = () => {
 
     fetchSurah()
   }, [id])
+
+  // Auto-scroll to target verse anchor if present in URL
+  useEffect(() => {
+    if (!loading && verses.length > 0) {
+      const searchParams = new URLSearchParams(location.search)
+      const verseParam = searchParams.get('verse') || location.hash.replace('#verse-', '')
+
+      if (verseParam) {
+        const targetId = `verse-${verseParam}`
+        setTimeout(() => {
+          const el = document.getElementById(targetId)
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            el.classList.add('ring-4', 'ring-amber-400', 'animate-pulse')
+            setTimeout(() => {
+              el.classList.remove('animate-pulse')
+            }, 3000)
+          }
+        }, 350)
+      }
+    }
+  }, [loading, verses, location])
 
   const handlePlayVerseAudio = (verseNumber: number, audioUrl: string) => {
     if (fullAudioObj) {
@@ -226,6 +272,7 @@ const DetailSurah = () => {
             return (
               <div
                 key={verse.nomorAyat}
+                id={`verse-${verse.nomorAyat}`}
                 className={`bg-white dark:bg-slate-900 border rounded-2xl p-5 sm:p-6 shadow-xs transition-all space-y-4 ${
                   isBookmarked
                     ? 'border-amber-400 dark:border-amber-500/80 ring-2 ring-amber-400/20 bg-amber-50/20 dark:bg-amber-950/10'
@@ -297,6 +344,24 @@ const DetailSurah = () => {
                           <span>Audio</span>
                         </>
                       )}
+                    </button>
+
+                    <button
+                      onClick={() => handleCopyVerse(verse)}
+                      className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors flex items-center gap-1 text-xs font-semibold"
+                      title="Salin Ayat ke Clipboard"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      <span className="hidden md:inline">Salin</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleShareVerse(verse)}
+                      className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors flex items-center gap-1 text-xs font-semibold"
+                      title="Bagikan Ayat"
+                    >
+                      <Share2 className="w-3.5 h-3.5" />
+                      <span className="hidden md:inline">Bagikan</span>
                     </button>
                   </div>
                 </div>
