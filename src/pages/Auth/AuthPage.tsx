@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, BookOpen, Mail, Lock, User, CheckCircle2, AlertCircle } from 'lucide-react'
+import { ArrowLeft, BookOpen, Mail, Lock, User, CheckCircle2, AlertCircle, ShieldCheck } from 'lucide-react'
 import { supabase } from '@/lib/supabaseClient'
 import { useApp } from '@/context/AppContext'
 
@@ -8,9 +8,10 @@ export const AuthPage = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const redirectPath = searchParams.get('redirect') || '/home'
+  const initialMode = searchParams.get('mode') as 'login' | 'register' | 'reset' | 'update_password' || 'login'
   const { currentUser } = useApp()
 
-  const [mode, setMode] = useState<'login' | 'register' | 'reset'>('login')
+  const [mode, setMode] = useState<'login' | 'register' | 'reset' | 'update_password'>(initialMode)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
@@ -18,8 +19,21 @@ export const AuthPage = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
-  // Redirect if already logged in
-  if (currentUser) {
+  useEffect(() => {
+    // Detect password recovery token in hash/URL
+    const handleAuthState = async () => {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
+        if (event === 'PASSWORD_RECOVERY') {
+          setMode('update_password')
+        }
+      })
+      return () => subscription.unsubscribe()
+    }
+    handleAuthState()
+  }, [])
+
+  // Redirect if already logged in (except when updating password)
+  if (currentUser && mode !== 'update_password') {
     navigate(redirectPath)
     return null
   }
@@ -46,18 +60,25 @@ export const AuthPage = () => {
           options: {
             data: {
               full_name: fullName
-            }
+            },
+            emailRedirectTo: `${window.location.origin}/auth?mode=login`
           }
         })
         if (error) throw error
-        setSuccessMsg('Pendaftaran berhasil! Silakan periksa konfirmasi email Anda atau langsung login.')
-        setTimeout(() => setMode('login'), 2000)
+        setSuccessMsg('Pendaftaran berhasil! Silakan periksa inbox email Anda untuk verifikasi akun.')
       } else if (mode === 'reset') {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/auth?mode=reset`
+          redirectTo: `${window.location.origin}/auth?mode=update_password`
         })
         if (error) throw error
-        setSuccessMsg('Instruksi reset kata sandi telah dikirim ke email Anda.')
+        setSuccessMsg('Instruksi pemulihan kata sandi telah dikirim ke email Anda.')
+      } else if (mode === 'update_password') {
+        const { error } = await supabase.auth.updateUser({
+          password
+        })
+        if (error) throw error
+        setSuccessMsg('Kata sandi baru berhasil diperbarui! Mengalihkan ke halaman utama...')
+        setTimeout(() => navigate('/home'), 1500)
       }
     } catch (err: any) {
       setErrorMsg(err.message || 'Terjadi kesalahan. Silakan coba lagi.')
@@ -94,11 +115,13 @@ export const AuthPage = () => {
             {mode === 'login' && 'Masuk ke Quread'}
             {mode === 'register' && 'Buat Akun Baru'}
             {mode === 'reset' && 'Reset Kata Sandi'}
+            {mode === 'update_password' && 'Buat Kata Sandi Baru'}
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
             {mode === 'login' && 'Masuk untuk menyimpan penanda terakhir baca dan akses fitur favorit.'}
             {mode === 'register' && 'Daftar gratis untuk menyinkronkan bacaan Qur\'an Anda di semua perangkat.'}
             {mode === 'reset' && 'Masukkan email Anda untuk menerima tautan pemulihan kata sandi.'}
+            {mode === 'update_password' && 'Masukkan kata sandi baru Anda di bawah ini.'}
           </p>
         </div>
 
@@ -139,25 +162,29 @@ export const AuthPage = () => {
               </div>
             )}
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Alamat Email</label>
-              <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="nama@email.com"
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 transition-colors"
-                />
+            {mode !== 'update_password' && (
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Alamat Email</label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="nama@email.com"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 transition-colors"
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
-            {mode !== 'reset' && (
+            {(mode === 'login' || mode === 'register' || mode === 'update_password') && (
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Kata Sandi</label>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    {mode === 'update_password' ? 'Kata Sandi Baru' : 'Kata Sandi'}
+                  </label>
                   {mode === 'login' && (
                     <button
                       type="button"
@@ -194,8 +221,12 @@ export const AuthPage = () => {
                 <span>Masuk Sekarang</span>
               ) : mode === 'register' ? (
                 <span>Daftar Akun</span>
-              ) : (
+              ) : mode === 'reset' ? (
                 <span>Kirim Link Reset</span>
+              ) : (
+                <span className="flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4" /> Simpan Kata Sandi Baru
+                </span>
               )}
             </button>
           </form>
@@ -226,7 +257,7 @@ export const AuthPage = () => {
               </p>
             )}
 
-            {mode === 'reset' && (
+            {(mode === 'reset' || mode === 'update_password') && (
               <p className="text-slate-500 dark:text-slate-400">
                 Kembali ke{' '}
                 <button
