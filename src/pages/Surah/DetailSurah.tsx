@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { ChevronLeft, Play, Pause, UserCheck, ArrowLeft, ArrowRight, Bookmark, Copy, Share2 } from 'lucide-react'
+import { ChevronLeft, Play, Pause, UserCheck, ArrowLeft, ArrowRight, Bookmark, Copy, Share2, BookOpenText, X, RotateCcw } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import type { Surah, Verse } from '../../types'
 import { quranService } from '../../services/quranService'
@@ -16,11 +16,16 @@ const DetailSurah = () => {
   const [surah, setSurah] = useState<Surah | null>(null)
   const [verses, setVerses] = useState<Verse[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedQari, setSelectedQari] = useState<string>('01')
+  const [selectedQari, setSelectedQari] = useState<string>('05')
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null)
   const [playingVerse, setPlayingVerse] = useState<number | null>(null)
   const [isPlayingFull, setIsPlayingFull] = useState<boolean>(false)
   const [fullAudioObj, setFullAudioObj] = useState<HTMLAudioElement | null>(null)
+  const [isAutoNext, setIsAutoNext] = useState<boolean>(true)
+
+  // Tafsir state
+  const [tafsirData, setTafsirData] = useState<Record<number, string>>({})
+  const [selectedTafsirVerse, setSelectedTafsirVerse] = useState<{ verseNumber: number; text: string } | null>(null)
 
   // Toast notification state
   const [toastMessage, setToastMessage] = useState<string | null>(null)
@@ -65,9 +70,14 @@ const DetailSurah = () => {
     const fetchSurah = async () => {
       try {
         setLoading(true)
-        const data = await quranService.getSurah(Number(id))
-        setSurah(data)
-        setVerses(data.ayat)
+        const surahId = Number(id)
+        const [surahRes, tafsirRes] = await Promise.all([
+          quranService.getSurah(surahId),
+          quranService.getTafsir(surahId)
+        ])
+        setSurah(surahRes)
+        setVerses(surahRes.ayat)
+        setTafsirData(tafsirRes)
       } catch (error) {
         console.error('Error fetching surah:', error)
       } finally {
@@ -134,9 +144,25 @@ const DetailSurah = () => {
     setCurrentAudio(audio)
     setPlayingVerse(verseNumber)
 
+    // Auto-scroll to currently playing verse card
+    const verseEl = document.getElementById(`verse-${verseNumber}`)
+    if (verseEl) {
+      verseEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+
     audio.onended = () => {
       setPlayingVerse(null)
       setCurrentAudio(null)
+
+      // Auto play next verse if enabled
+      if (isAutoNext && verseNumber < verses.length) {
+        const nextVerse = verses.find(v => v.nomorAyat === verseNumber + 1)
+        if (nextVerse && nextVerse.audio[selectedQari]) {
+          setTimeout(() => {
+            handlePlayVerseAudio(nextVerse.nomorAyat, nextVerse.audio[selectedQari])
+          }, 300)
+        }
+      }
     }
   }
 
@@ -204,20 +230,33 @@ const DetailSurah = () => {
             <span>Kembali ke Daftar Surah</span>
           </button>
 
-          <div className="flex items-center gap-2">
-            <UserCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Qari:</span>
-            <select
-              value={selectedQari}
-              onChange={(e) => setSelectedQari(e.target.value)}
-              className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:border-emerald-500"
-            >
-              {qariList.map((q) => (
-                <option key={q.id} value={q.id}>
-                  {q.name}
-                </option>
-              ))}
-            </select>
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="flex items-center gap-2 cursor-pointer bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300">
+              <input
+                type="checkbox"
+                checked={isAutoNext}
+                onChange={(e) => setIsAutoNext(e.target.checked)}
+                className="accent-emerald-600 cursor-pointer w-3.5 h-3.5"
+              />
+              <RotateCcw className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span>Auto Next Ayat</span>
+            </label>
+
+            <div className="flex items-center gap-2">
+              <UserCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Qari:</span>
+              <select
+                value={selectedQari}
+                onChange={(e) => setSelectedQari(e.target.value)}
+                className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:border-emerald-500"
+              >
+                {qariList.map((q) => (
+                  <option key={q.id} value={q.id}>
+                    {q.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -347,6 +386,18 @@ const DetailSurah = () => {
                     </button>
 
                     <button
+                      onClick={() => {
+                        const tafsirText = tafsirData[verse.nomorAyat] || 'Tafsir sedang dimuat...'
+                        setSelectedTafsirVerse({ verseNumber: verse.nomorAyat, text: tafsirText })
+                      }}
+                      className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-400 font-bold transition-colors flex items-center gap-1.5 text-xs border border-emerald-200 dark:border-emerald-800/60"
+                      title="Lihat Tafsir Kemenag Ayat Ini"
+                    >
+                      <BookOpenText className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Tafsir</span>
+                    </button>
+
+                    <button
                       onClick={() => handleCopyVerse(verse)}
                       className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors flex items-center gap-1 text-xs font-semibold"
                       title="Salin Ayat ke Clipboard"
@@ -407,6 +458,54 @@ const DetailSurah = () => {
         </div>
 
       </main>
+
+      {/* Tafsir Kemenag Modal Dialog */}
+      {selectedTafsirVerse && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-3xl shadow-2xl p-6 sm:p-8 space-y-5 relative">
+            
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <BookOpenText className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white font-heading">
+                  Tafsir Kemenag &bull; {surah?.namaLatin} Ayat {selectedTafsirVerse.verseNumber}
+                </h3>
+              </div>
+              <button
+                onClick={() => setSelectedTafsirVerse(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-slate-700 dark:text-slate-300 text-xs sm:text-sm leading-relaxed font-sans">
+              <div className="p-4 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800/60">
+                <p className="font-semibold text-emerald-800 dark:text-emerald-300 text-xs mb-1">Keterangan:</p>
+                <p className="text-xs text-emerald-700 dark:text-emerald-400">
+                  Tafsir Al-Qur'an Kementerian Agama Republik Indonesia (Kemenag RI) penjelasan ringkas & lengkap per ayat.
+                </p>
+              </div>
+
+              <div className="p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <p className="whitespace-pre-line font-medium leading-relaxed">
+                  {selectedTafsirVerse.text}
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                onClick={() => setSelectedTafsirVerse(null)}
+                className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all"
+              >
+                Tutup Tafsir
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
       {/* Floating Toast Notification */}
       {toastMessage && (

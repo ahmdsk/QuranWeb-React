@@ -24,6 +24,24 @@ class QuranService {
       throw error
     }
   }
+
+  async getTafsir(id: number): Promise<Record<number, string>> {
+    try {
+      const response = await fetch(`${this.baseUrl}/tafsir/${id}`)
+      const data = await response.json()
+      if (data.code === 200 && data.data?.tafsir) {
+        const tafsirMap: Record<number, string> = {}
+        data.data.tafsir.forEach((item: { ayat: number; teks: string }) => {
+          tafsirMap[item.ayat] = item.teks
+        })
+        return tafsirMap
+      }
+      return {}
+    } catch (error) {
+      console.error('Error fetching tafsir:', error)
+      return {}
+    }
+  }
 }
 
 export const quranService = new QuranService() 
