@@ -238,18 +238,22 @@ export const QiblaCompass = ({ latitude: propLat, longitude: propLng, cityName }
 
         {/* Rotating Compass Dial with Kaaba Needle */}
         <div
-          className="w-full h-full relative transition-transform duration-300 ease-out flex items-center justify-center"
-          style={{ transform: `rotate(${finalRotation}deg)` }}
+          className="w-full h-full absolute inset-0 transition-transform duration-500 ease-out flex items-center justify-center"
+          style={{ transform: `rotate(${finalRotation}deg)`, transformOrigin: 'center center' }}
         >
-          {/* Qibla Needle Arrow */}
-          <div className="flex flex-col items-center justify-start h-full py-4">
+          {/* Full Height Pointer Needle Centered */}
+          <div className="absolute inset-0 flex flex-col items-center justify-between p-3 pointer-events-none">
+            {/* Kaaba Head Icon at Qibla Bearing */}
             <div className="flex flex-col items-center space-y-1">
               <div className="w-10 h-10 rounded-full bg-emerald-600 text-white font-black flex items-center justify-center text-base shadow-lg shadow-emerald-600/50 border-2 border-white dark:border-slate-900 animate-pulse">
                 🕋
               </div>
               <Navigation className="w-6 h-6 text-emerald-600 dark:text-emerald-400 fill-emerald-600" />
+              <div className="w-1.5 h-14 bg-gradient-to-b from-emerald-500 via-emerald-400 to-transparent rounded-full"></div>
             </div>
-            <div className="w-1.5 bg-gradient-to-b from-emerald-500 via-emerald-400 to-transparent flex-1 rounded-full"></div>
+
+            {/* Opposing Tail Pointer */}
+            <div className="w-1 h-8 bg-gradient-to-t from-slate-300 dark:from-slate-700 to-transparent rounded-full opacity-40"></div>
           </div>
         </div>
 
